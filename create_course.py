@@ -13,34 +13,39 @@ ROOT = Path(__file__).parent
 LESSONS: list[tuple[str, str, list[dict]]] = []
 
 COLAB_PACKAGES = {
-    1: ["transformers>=4.51,<5", "sentencepiece"],
-    7: ["transformers>=4.51,<5", "datasets>=3.5,<6", "sentencepiece"],
-    8: ["datasets>=3.5,<6", "huggingface-hub>=0.30,<1"],
-    10: ["transformers>=4.51,<5", "datasets>=3.5,<6"],
-    11: ["transformers>=4.51,<5", "datasets>=3.5,<6", "trl>=0.16", "peft>=0.15"],
-    14: ["transformers>=4.51,<5", "datasets>=3.5,<6", "peft>=0.15", "trl>=0.16", "accelerate>=1.6", "bitsandbytes>=0.45", "sentencepiece"],
-    15: ["transformers>=4.51,<5", "datasets>=3.5,<6", "peft>=0.15", "trl>=0.16", "accelerate>=1.6", "bitsandbytes>=0.45", "sentencepiece"],
-    16: ["transformers>=4.51,<5", "datasets>=3.5,<6", "peft>=0.15", "trl>=0.16", "accelerate>=1.6", "sentencepiece"],
-    17: ["transformers>=4.51,<5", "huggingface-hub>=0.30,<1", "sentencepiece"],
-    18: ["transformers>=4.51,<5", "huggingface-hub>=0.30,<1", "python-dotenv>=1.1", "sentencepiece"],
-    19: ["sentence-transformers>=4,<6"],
-    20: ["sentence-transformers>=4,<6"],
-    21: ["sentence-transformers>=4,<6"],
-    22: ["huggingface-hub>=0.30,<1", "python-dotenv>=1.1"],
-    23: ["smolagents>=1.17", "huggingface-hub>=0.30,<1", "python-dotenv>=1.1"],
-    24: ["mcp>=1.6"],
-    29: ["huggingface-hub>=0.30,<1", "python-dotenv>=1.1"],
-    32: ["huggingface-hub>=0.30,<1", "python-dotenv>=1.1", "pillow>=10"],
-    34: ["transformers>=4.51,<5", "accelerate>=1.6", "safetensors>=0.5"],
-    35: ["httpx>=0.28"],
-    36: ["httpx>=0.28", "pydantic>=2.11"],
-    37: ["httpx>=0.28"],
+    4: ["transformers>=4.51,<5", "sentencepiece"],
+    6: ["transformers>=4.51,<5"],
+    13: ["transformers>=4.51,<5", "datasets>=3.5,<6", "sentencepiece"],
+    14: ["datasets>=3.5,<6", "huggingface-hub>=0.30,<1"],
+    16: ["transformers>=4.51,<5", "datasets>=3.5,<6"],
+    17: ["transformers>=4.51,<5", "datasets>=3.5,<6", "trl>=0.16", "peft>=0.15"],
+    20: ["transformers>=4.51,<5", "datasets>=3.5,<6", "peft>=0.15", "trl>=0.16", "accelerate>=1.6", "bitsandbytes>=0.45", "sentencepiece"],
+    21: ["transformers>=4.51,<5", "datasets>=3.5,<6", "peft>=0.15", "trl>=0.16", "accelerate>=1.6", "bitsandbytes>=0.45", "sentencepiece"],
+    22: ["transformers>=4.51,<5", "datasets>=3.5,<6", "peft>=0.15", "trl>=0.16", "accelerate>=1.6", "sentencepiece"],
+    24: ["transformers>=4.51,<5", "huggingface-hub>=0.30,<1", "sentencepiece"],
+    25: ["transformers>=4.51,<5", "sentencepiece"],
+    26: ["transformers>=4.51,<5", "huggingface-hub>=0.30,<1", "sentencepiece"],
+    27: ["transformers>=4.51,<5", "huggingface-hub>=0.30,<1", "python-dotenv>=1.1", "sentencepiece"],
+    28: ["sentence-transformers>=4,<6"],
+    29: ["sentence-transformers>=4,<6", "datasets>=3.5,<6"],
+    30: ["sentence-transformers>=4,<6"],
+    31: ["sentence-transformers>=4,<6"],
+    32: ["huggingface-hub>=0.30,<1", "python-dotenv>=1.1"],
+    33: ["smolagents>=1.17", "huggingface-hub>=0.30,<1", "python-dotenv>=1.1"],
+    34: ["mcp>=1.6"],
+    39: ["huggingface-hub>=0.30,<1", "python-dotenv>=1.1"],
+    40: ["lighteval>=0.12"],
+    43: ["huggingface-hub>=0.30,<1", "python-dotenv>=1.1", "pillow>=10"],
+    45: ["transformers>=4.51,<5", "accelerate>=1.6", "safetensors>=0.5"],
+    46: ["httpx>=0.28"],
+    47: ["httpx>=0.28", "pydantic>=2.11"],
+    48: ["httpx>=0.28"],
 }
 
 
 def colab_setup(number: int) -> dict:
     packages = COLAB_PACKAGES.get(number, [])
-    training = number in {9, 10, 14, 15, 16}
+    training = number in {15, 16, 20, 21, 22, 23, 29, 49}
     source = f'''# Colab/local environment setup — run this cell first.
 import importlib.util
 import os
@@ -138,13 +143,13 @@ def add(path: str, title: str, objectives: list[str], cells: list[dict], exercis
 # Module 1 — Mathematical foundations
 # ---------------------------------------------------------------------------
 
-add("01_math_foundations/01_tokens_and_causal_lm.ipynb", "Tokens and Causal Language Modeling", [
+add("01_math_foundations/04_tokens_and_causal_lm.ipynb", "Tokens and Causal Language Modeling", [
     "Distinguish bytes, characters, words, and subword tokens",
     "Construct shifted labels for next-token prediction",
     "Relate context length, vocabulary size, logits, and generation",
 ], [
     md(r"""
-    ## 1.1 Tokenization is a learned compression interface
+    ## 4.1 Tokenization is a learned compression interface
 
     A tokenizer maps text to integer IDs from a finite vocabulary. Byte-level BPE and
     unigram tokenizers preserve arbitrary text while learning reusable multi-byte pieces.
@@ -167,7 +172,7 @@ add("01_math_foundations/01_tokens_and_causal_lm.ipynb", "Tokens and Causal Lang
         print(f"{text!r}\n  ids={ids}\n  pieces={pieces}\n")
     '''),
     md(r"""
-    ## 1.2 The causal objective
+    ## 4.2 The causal objective
 
     For tokens \(x_1,\ldots,x_T\), an autoregressive model factorizes
 
@@ -194,7 +199,7 @@ add("01_math_foundations/01_tokens_and_causal_lm.ipynb", "Tokens and Causal Lang
     print("The model internally aligns logits[:, :-1] with labels[:, 1:].")
     '''),
     md(r"""
-    ## 1.3 From logits to text
+    ## 4.3 From logits to text
 
     Logits are unnormalized scores. Greedy decoding chooses the largest logit; sampling
     draws from a probability distribution after temperature/top-k/top-p transformations.
@@ -207,13 +212,13 @@ add("01_math_foundations/01_tokens_and_causal_lm.ipynb", "Tokens and Causal Lang
     "Explain why changing a tokenizer can invalidate pretrained embedding weights.",
 ])
 
-add("01_math_foundations/02_probability_loss_gradients.ipynb", "Probability, Cross-Entropy, and Gradients", [
+add("01_math_foundations/05_probability_loss_gradients.ipynb", "Probability, Cross-Entropy, and Gradients", [
     "Compute stable softmax and negative log-likelihood",
     "Derive the gradient of cross-entropy with respect to logits",
     "Connect perplexity, calibration, and optimization",
 ], [
     md(r"""
-    ## 2.1 Softmax and numerical stability
+    ## 5.1 Softmax and numerical stability
 
     For logits \(z\), \(p_i=\exp(z_i)/\sum_j\exp(z_j)\). Subtracting
     \(\max(z)\) changes neither probabilities nor ratios and prevents overflow.
@@ -232,7 +237,7 @@ add("01_math_foundations/02_probability_loss_gradients.ipynb", "Probability, Cro
         print(temperature, stable_softmax(logits / temperature))
     '''),
     md(r"""
-    ## 2.2 Cross-entropy
+    ## 5.2 Cross-entropy
 
     For one-hot target \(y\), loss is \(L=-\sum_i y_i\log p_i=-\log p_y\).
     The useful simplification is
@@ -258,7 +263,7 @@ add("01_math_foundations/02_probability_loss_gradients.ipynb", "Probability, Cro
     print("p - y:   ", expected)
     '''),
     md(r"""
-    ## 2.3 Optimization is not evaluation
+    ## 5.3 Optimization is not evaluation
 
     Lower held-out token loss usually signals better next-token prediction, but product
     quality may depend on instruction following, factuality, tool use, safety, or retrieval.
@@ -272,13 +277,13 @@ add("01_math_foundations/02_probability_loss_gradients.ipynb", "Probability, Cro
     "Construct two tokenizers for which identical text produces incomparable perplexities.",
 ])
 
-add("01_math_foundations/03_decoder_transformer.ipynb", "A Decoder Transformer from Scratch", [
+add("01_math_foundations/07_decoder_transformer.ipynb", "A Decoder Transformer from Scratch", [
     "Track tensor shapes through embeddings, attention, MLP, residuals, and LM head",
     "Implement causal self-attention and a pre-norm decoder block",
     "Calculate the dominant parameter and compute terms",
 ], [
     md(r"""
-    ## 3.1 Shape ledger
+    ## 7.1 Shape ledger
 
     Let batch \(B\), sequence \(T\), hidden width \(D\), heads \(H\), and head width
     \(d_h=D/H\). Token embeddings have shape `[B,T,D]`. Projections produce Q, K, V;
@@ -342,7 +347,7 @@ add("01_math_foundations/03_decoder_transformer.ipynb", "A Decoder Transformer f
     print("parameters", sum(p.numel() for p in block.parameters()))
     '''),
     md(r"""
-    ## 3.2 Why scaling, residuals, and normalization matter
+    ## 7.2 Why scaling, residuals, and normalization matter
 
     Dot products grow in magnitude with head dimension; division by \(\sqrt{d_h}\) keeps
     softmax from saturating early. Residual connections create short gradient paths.
@@ -358,13 +363,13 @@ add("01_math_foundations/03_decoder_transformer.ipynb", "A Decoder Transformer f
     "Estimate parameters for a 24-layer, width-2048 decoder with 4× MLP expansion.",
 ])
 
-add("01_math_foundations/04_position_encodings_rope.ipynb", "Position Encodings and RoPE", [
+add("01_math_foundations/08_position_encodings_rope.ipynb", "Position Encodings and RoPE", [
     "Explain why attention alone is permutation equivariant",
     "Compare learned, sinusoidal, relative, ALiBi, and rotary position methods",
     "Implement RoPE and reason about context extension",
 ], [
     md(r"""
-    ## 4.1 Position must enter somewhere
+    ## 8.1 Position must enter somewhere
 
     Without position information, permuting input tokens permutes outputs but does not
     change the attention relation itself. Learned absolute embeddings add a position vector.
@@ -373,7 +378,7 @@ add("01_math_foundations/04_position_encodings_rope.ipynb", "Position Encodings 
     their dot product depends on relative displacement.
     """),
     md(r"""
-    ## 4.2 Rotary position embedding
+    ## 8.2 Rotary position embedding
 
     For each two-dimensional feature pair and angle \(m\theta_i\), apply
 
@@ -405,7 +410,7 @@ add("01_math_foundations/04_position_encodings_rope.ipynb", "Position Encodings 
     print("norm preserved:", torch.allclose(q.norm(dim=-1), rotated.norm(dim=-1), atol=1e-5))
     '''),
     md(r"""
-    ## 4.3 Context extension is not free
+    ## 8.3 Context extension is not free
 
     RoPE extrapolation can degrade when inference positions exceed training positions.
     Scaling methods alter positions or frequencies, but a larger configured window does
@@ -419,13 +424,13 @@ add("01_math_foundations/04_position_encodings_rope.ipynb", "Position Encodings 
     "Design a needle-in-a-haystack test that cannot be passed using lexical shortcuts.",
 ])
 
-add("01_math_foundations/05_efficient_attention.ipynb", "MHA, MQA, GQA, FlashAttention, and KV Caches", [
+add("01_math_foundations/09_efficient_attention.ipynb", "MHA, MQA, GQA, FlashAttention, and KV Caches", [
     "Compare multi-head, multi-query, and grouped-query attention",
     "Separate exact attention algorithms from approximation",
     "Estimate KV-cache memory and understand FlashAttention's IO benefit",
 ], [
     md(r"""
-    ## 5.1 Sharing K/V heads
+    ## 9.1 Sharing K/V heads
 
     Multi-head attention (MHA) has one K/V head per query head. Multi-query attention
     (MQA) shares one K/V head across all query heads. Grouped-query attention (GQA) uses
@@ -443,7 +448,7 @@ add("01_math_foundations/05_efficient_attention.ipynb", "MHA, MQA, GQA, FlashAtt
         print(f"{name}: {size:.2f} GiB")
     '''),
     md(r"""
-    ## 5.2 FlashAttention
+    ## 9.2 FlashAttention
 
     Standard attention conceptually computes \(S=QK^T\), softmaxes rows, then multiplies
     by V. The arithmetic remains quadratic in sequence length, but writing the full score
@@ -466,7 +471,7 @@ add("01_math_foundations/05_efficient_attention.ipynb", "MHA, MQA, GQA, FlashAtt
         print("CPU/MPS demonstration: fused CUDA FlashAttention is not expected here.")
     '''),
     md(r"""
-    ## 5.3 Prefill versus decode
+    ## 9.3 Prefill versus decode
 
     Prefill processes the prompt in parallel and is compute-heavy. Decode generates one
     token per sequence step, reads the growing KV cache, and is often memory-bandwidth
@@ -484,13 +489,13 @@ add("01_math_foundations/05_efficient_attention.ipynb", "MHA, MQA, GQA, FlashAtt
 # Module 2 — Training
 # ---------------------------------------------------------------------------
 
-add("01_math_foundations/06_mixture_of_experts.ipynb", "Mixture-of-Experts Transformers from First Principles", [
+add("01_math_foundations/10_mixture_of_experts.ipynb", "Mixture-of-Experts Transformers from First Principles", [
     "Derive sparse MoE routing, expert aggregation, and parameter-versus-compute scaling",
     "Implement top-k routing with capacity and auxiliary load-balancing losses",
     "Explain expert parallelism, communication costs, collapse, and production diagnostics",
 ], [
     md(r"""
-    ## 7.1 Sparse capacity
+    ## 13.1 Sparse capacity
 
     A dense feed-forward layer applies the same parameters to every token. A sparse
     mixture-of-experts (MoE) layer owns several feed-forward networks but routes each token to only
@@ -519,7 +524,7 @@ add("01_math_foundations/06_mixture_of_experts.ipynb", "Mixture-of-Experts Trans
     print("selected weights sum:", weights.sum(-1)[:5])
     ''') ,
     md(r"""
-    ## 7.2 Dispatch, combine, and capacity
+    ## 13.2 Dispatch, combine, and capacity
 
     An implementation groups tokens by selected expert, runs expert matrix multiplications, weights
     the results, and scatters them back to original order. A naïve Python loop is readable; optimized
@@ -548,7 +553,7 @@ add("01_math_foundations/06_mixture_of_experts.ipynb", "Mixture-of-Experts Trans
     print(combined.shape, "finite:", torch.isfinite(combined).all().item())
     ''') ,
     md(r"""
-    ## 7.3 Why routing needs regularization
+    ## 13.3 Why routing needs regularization
 
     Task loss alone can collapse traffic onto a few initially favored experts. A load-balancing
     objective encourages agreement between the fraction of tokens assigned to each expert and mean
@@ -573,7 +578,7 @@ add("01_math_foundations/06_mixture_of_experts.ipynb", "Mixture-of-Experts Trans
            "z_loss": z_loss.item(), "entropy": entropy.item()})
     ''') ,
     md(r"""
-    ## 7.4 Expert parallelism and inference
+    ## 13.4 Expert parallelism and inference
 
     Data parallelism replicates experts; expert parallelism shards them. Tensor, pipeline, and expert
     parallelism can be combined, but every axis introduces placement and collective-communication
@@ -595,7 +600,7 @@ add("01_math_foundations/06_mixture_of_experts.ipynb", "Mixture-of-Experts Trans
     for e, k in [(8, 2), (64, 2), (128, 4)]: print(e, k, moe_accounting(4096, 14336, e, k))
     ''') ,
     md(r"""
-    ## 7.5 Evaluation and design choices
+    ## 13.5 Evaluation and design choices
 
     Compare an MoE model with a dense baseline under matched training tokens and either matched active
     compute or matched wall-clock budget. Evaluate quality, throughput, memory, communication, and
@@ -615,13 +620,13 @@ add("01_math_foundations/06_mixture_of_experts.ipynb", "Mixture-of-Experts Trans
     "Design an expert-parallel placement for two nodes and identify every all-to-all boundary.",
 ])
 
-add("02_training/07_data_tokenization_packing.ipynb", "Training Data, Tokenization, and Packing", [
+add("02_training/13_data_tokenization_packing.ipynb", "Training Data, Tokenization, and Packing", [
     "Build reproducible dataset splits without leakage",
     "Format conversational examples with the model chat template",
     "Compare padding, concatenation, packing, truncation, and loss masking",
 ], [
     md(r"""
-    ## 7.1 Data quality defines the objective
+    ## 13.1 Data quality defines the objective
 
     Pretraining predicts all eligible tokens. SFT usually trains on conversational text,
     sometimes masking user/system tokens so loss applies only to assistant responses.
@@ -654,7 +659,7 @@ add("02_training/07_data_tokenization_packing.ipynb", "Training Data, Tokenizati
     print(f"non-padding utilization: {utilization:.1%}")
     '''),
     md(r"""
-    ## 7.2 Packing and contamination
+    ## 13.2 Packing and contamination
 
     Packing combines short examples into full sequences to reduce padding. Boundaries need
     EOS tokens, correct position handling, and deliberate attention behavior: examples may
@@ -667,13 +672,13 @@ add("02_training/07_data_tokenization_packing.ipynb", "Training Data, Tokenizati
     "Write five automated dataset checks, including leakage and empty responses.",
 ])
 
-add("02_training/08_synthetic_data_pipelines.ipynb", "Synthetic Data Pipelines for LLM Training", [
+add("02_training/14_synthetic_data_pipelines.ipynb", "Synthetic Data Pipelines for LLM Training", [
     "Design generation, verification, filtering, deduplication, and curriculum stages",
     "Measure diversity, contamination, provenance, and teacher-induced bias",
     "Build a reproducible synthetic instruction-data pipeline with explicit quality gates",
 ], [
     md(r"""
-    ## 10.1 Synthetic data is a pipeline, not a prompt
+    ## 16.1 Synthetic data is a pipeline, not a prompt
 
     Synthetic examples can expand coverage, translate formats, generate edge cases, distill a stronger
     teacher, or create problems with mechanically verifiable answers. They do not create information for
@@ -699,7 +704,7 @@ add("02_training/08_synthetic_data_pipelines.ipynb", "Synthetic Data Pipelines f
     print(fingerprint(example), asdict(example))
     ''') ,
     md(r"""
-    ## 10.2 Seed distribution and generation
+    ## 16.2 Seed distribution and generation
 
     Start from an explicit capability taxonomy and sample seeds to cover it. Uniform task counts rarely
     mean uniform difficulty, language, or token volume. Stratify by domain, skill, difficulty, format,
@@ -724,7 +729,7 @@ add("02_training/08_synthetic_data_pipelines.ipynb", "Synthetic Data Pipelines f
     print(generation_plan)
     ''') ,
     md(r"""
-    ## 10.3 Verification beats self-confidence
+    ## 16.3 Verification beats self-confidence
 
     Prefer independent, deterministic validators: execute tests in a sandbox, compare normalized exact
     answers, validate JSON Schema, type-check programs, recompute arithmetic, confirm citations against
@@ -750,7 +755,7 @@ add("02_training/08_synthetic_data_pipelines.ipynb", "Synthetic Data Pipelines f
     print([asdict(verify_integer(row, 391)) for row in rows])
     ''') ,
     md(r"""
-    ## 10.4 Deduplication, leakage, and diversity
+    ## 16.4 Deduplication, leakage, and diversity
 
     Exact hashes catch identical normalized text. Near-duplicate detection may use n-gram MinHash,
     locality-sensitive hashing, embeddings, syntax trees, or task-specific canonicalization. Deduplicate
@@ -772,7 +777,7 @@ add("02_training/08_synthetic_data_pipelines.ipynb", "Synthetic Data Pipelines f
     print(groups)
     ''') ,
     md(r"""
-    ## 10.5 Mixtures, experiments, and release
+    ## 16.5 Mixtures, experiments, and release
 
     Synthetic data should earn its place through ablation. Train matched runs with human-only data, each
     synthetic source, and mixtures while holding tokens or compute constant. Evaluate target gains,
@@ -792,13 +797,13 @@ add("02_training/08_synthetic_data_pipelines.ipynb", "Synthetic Data Pipelines f
     "Run a data-mixture ablation and report quality per training token, not only final score.",
 ])
 
-add("02_training/09_native_pytorch_pretraining.ipynb", "Pretraining a Tiny Decoder with Native PyTorch", [
+add("02_training/15_native_pytorch_pretraining.ipynb", "Pretraining a Tiny Decoder with Native PyTorch", [
     "Turn raw text into causal language-model examples without a framework abstraction",
     "Build and train a randomly initialized decoder for one small epoch",
     "Evaluate loss, perplexity, generation, and checkpoint round trips honestly",
 ], [
     md(r"""
-    ## 9.1 What this experiment proves—and what it does not
+    ## 15.1 What this experiment proves—and what it does not
 
     Pretraining begins with random parameters and optimizes next-token likelihood over a large,
     broad corpus. This notebook preserves that causal chain at toy scale: raw text becomes bytes,
@@ -858,12 +863,12 @@ add("02_training/09_native_pytorch_pretraining.ipynb", "Pretraining a Tiny Decod
     print("examples:", len(train_data), "batch:", x.shape, "shift correct:", torch.equal(x[:, 1:], y[:, :-1]))
     ''') ,
     md(r"""
-    ## 9.2 A small modern decoder
+    ## 15.2 A small modern decoder
 
     Each block is pre-normalized: causal self-attention and a feed-forward network each add a
     residual update. PyTorch's scaled-dot-product attention can select an optimized kernel on
-    supported hardware. Learned position embeddings keep this implementation compact; Notebook 4
-    develops RoPE, and Notebook 5 explains why fused attention changes memory traffic rather than
+    supported hardware. Learned position embeddings keep this implementation compact; Notebook 8
+    develops RoPE, and Notebook 9 explains why fused attention changes memory traffic rather than
     the mathematical attention result. Input and output embeddings are tied, reducing parameters
     and forcing both interfaces to share a token geometry.
     """),
@@ -954,18 +959,18 @@ add("02_training/09_native_pytorch_pretraining.ipynb", "Pretraining a Tiny Decod
         print("checkpoint exact:", torch.equal(model(probe)[0], restored(probe)[0]))
     ''') ,
 ], [
-    "Replace learned positions with the RoPE implementation from Notebook 4.",
+    "Replace learned positions with the RoPE implementation from Notebook 8.",
     "Add validation checkpoints during the epoch and plot train versus validation loss.",
     "Increase corpus diversity while holding token count fixed; explain the changed generations.",
 ])
 
-add("02_training/10_hf_random_init_pretraining.ipynb", "Pretraining a Random-Initialized Hugging Face Model", [
+add("02_training/16_hf_random_init_pretraining.ipynb", "Pretraining a Random-Initialized Hugging Face Model", [
     "Instantiate a Transformers causal LM from configuration rather than downloaded weights",
     "Run a one-epoch Hugging Face-compatible pretraining loop and save_pretrained artifact",
     "Separate architecture, tokenizer, weights, training recipe, and downstream usability",
 ], [
     md(r"""
-    ## 10.1 `from_config` means architecture without learned knowledge
+    ## 16.1 `from_config` means architecture without learned knowledge
 
     `from_pretrained` loads a configuration plus learned parameters. `from_config` constructs the
     same kind of module with freshly initialized parameters. We deliberately combine a mature GPT-2
@@ -1073,7 +1078,7 @@ add("02_training/10_hf_random_init_pretraining.ipynb", "Pretraining a Random-Ini
     print("saved files:", sorted(p.name for p in output_dir.iterdir()), "max logit delta:", delta)
     ''') ,
     md(r"""
-    ## 10.2 Interpreting the result
+    ## 16.2 Interpreting the result
 
     Falling training loss proves the pipeline can fit this stream. It does not establish facts,
     instruction following, safety, or even robust English generation. The validation set here is
@@ -1088,13 +1093,13 @@ add("02_training/10_hf_random_init_pretraining.ipynb", "Pretraining a Random-Ini
     "Resume from the saved artifact for a second epoch and preserve optimizer state separately.",
 ])
 
-add("02_training/11_base_to_posttrained_models.ipynb", "From Base Model to Instruction, Reasoning, and Tool-Using Model", [
+add("02_training/17_base_to_posttrained_models.ipynb", "From Base Model to Instruction, Reasoning, and Tool-Using Model", [
     "Map continued pretraining, SFT, preference optimization, RL, distillation, and safety stages",
     "Represent the data and objective used at each post-training stage",
     "Explain reasoning models, test-time compute, tool use, and capability evaluation without mystique",
 ], [
     md(r"""
-    ## 11.1 Post-training changes behavior, not the fundamental token interface
+    ## 17.1 Post-training changes behavior, not the fundamental token interface
 
     A base causal model predicts plausible continuations. A user-facing assistant must interpret
     roles, follow requests, respect policies, call tools, express uncertainty, and stop correctly.
@@ -1122,7 +1127,7 @@ add("02_training/11_base_to_posttrained_models.ipynb", "From Base Model to Instr
         print(f"{name:24} | {data:29} | {objective:28} | {purpose}")
     ''') ,
     md(r"""
-    ## 11.2 Data contracts for different objectives
+    ## 17.2 Data contracts for different objectives
 
     SFT demonstrations answer “what should the model produce?” Preference pairs answer “which of
     these is better?” Reward-model records attach scalar or categorical judgments. Online RL records
@@ -1155,7 +1160,7 @@ add("02_training/11_base_to_posttrained_models.ipynb", "From Base Model to Instr
     print("SFT labels:", labels.tolist(), "(-100 is ignored by cross-entropy)")
     ''') ,
     md(r"""
-    ## 11.3 Preference learning, reward models, and RL
+    ## 17.3 Preference learning, reward models, and RL
 
     A reward model is a learned measurement instrument, not truth. It can inherit rater bias and
     reward superficial length, confidence, or style. DPO directly increases a chosen response's
@@ -1174,7 +1179,7 @@ add("02_training/11_base_to_posttrained_models.ipynb", "From Base Model to Instr
     print("per-pair DPO losses:", dpo_losses.tolist(), "mean:", dpo_losses.mean().item())
     ''') ,
     md(r"""
-    ## 11.4 What makes a “reasoning” or “thinking” model?
+    ## 17.4 What makes a “reasoning” or “thinking” model?
 
     The label usually describes a training and inference regime, not a new transformer primitive.
     Capabilities may be elicited through high-quality worked solutions, distilled traces from a
@@ -1198,7 +1203,7 @@ add("02_training/11_base_to_posttrained_models.ipynb", "From Base Model to Instr
     print("Real samples are correlated and selection/verifiers are imperfect.")
     ''') ,
     md(r"""
-    ## 11.5 Instruction following, tools, safety, and specialization
+    ## 17.5 Instruction following, tools, safety, and specialization
 
     Chat templates serialize roles into tokens; the model must be trained on that exact convention.
     Tool use is structured prediction plus an external control plane: the model proposes a call, but
@@ -1231,13 +1236,13 @@ add("02_training/11_base_to_posttrained_models.ipynb", "From Base Model to Instr
     "Compare single-sample accuracy with best-of-N accuracy and total generated-token cost.",
 ])
 
-add("02_training/12_optimization_training_loop.ipynb", "Optimization and the Training Loop", [
+add("02_training/18_optimization_training_loop.ipynb", "Optimization and the Training Loop", [
     "Implement forward, backward, clipping, optimizer, and scheduler steps",
     "Explain AdamW, warmup, weight decay, and gradient norms",
     "Recognize underfitting, overfitting, divergence, and data bugs",
 ], [
     md(r"""
-    ## 12.1 One optimizer update
+    ## 18.1 One optimizer update
 
     A robust update is: fetch batch → forward → masked mean loss → backward → optionally
     unscale → clip → optimizer step → scheduler step → zero gradients. AdamW maintains two
@@ -1266,7 +1271,7 @@ add("02_training/12_optimization_training_loop.ipynb", "Optimization and the Tra
                   f"lr={scheduler.get_last_lr()[0]:.2e}")
     '''),
     md(r"""
-    ## 12.2 Debug the learning dynamics
+    ## 18.2 Debug the learning dynamics
 
     Log train and validation loss, learning rate, gradient norm, tokens/second, memory,
     skipped/overflowed steps, and data samples. A flat loss may mean bad labels or tiny LR;
@@ -1280,13 +1285,13 @@ add("02_training/12_optimization_training_loop.ipynb", "Optimization and the Tra
     "Save a checkpoint at step 15 and verify resumed training matches a continuous run.",
 ])
 
-add("02_training/13_efficient_distributed_training.ipynb", "Memory-Efficient and Distributed Training", [
+add("02_training/19_efficient_distributed_training.ipynb", "Memory-Efficient and Distributed Training", [
     "Use gradient accumulation without changing gradient scale",
     "Explain activation checkpointing and mixed precision tradeoffs",
     "Distinguish data, tensor, pipeline, and fully sharded parallelism",
 ], [
     md(r"""
-    ## 13.1 Where memory goes
+    ## 19.1 Where memory goes
 
     Training memory includes weights, gradients, optimizer states, saved activations, and
     temporary workspaces. Full-precision Adam can require roughly 16 bytes per parameter
@@ -1300,7 +1305,7 @@ add("02_training/13_efficient_distributed_training.ipynb", "Memory-Efficient and
         print(f"{size:g}B params: {rough_gib(size):.1f} GiB before activations/workspace")
     '''),
     md(r"""
-    ## 13.2 Gradient accumulation
+    ## 19.2 Gradient accumulation
 
     For \(K\) microbatches, divide each microbatch loss by \(K\), call backward K times,
     then update once. Effective global batch is
@@ -1323,7 +1328,7 @@ add("02_training/13_efficient_distributed_training.ipynb", "Memory-Efficient and
     print("one optimizer update from", accumulation_steps, "microbatches")
     '''),
     md(r"""
-    ## 13.3 Checkpointing, precision, and parallelism
+    ## 19.3 Checkpointing, precision, and parallelism
 
     Activation checkpointing saves selected inputs and recomputes forward regions during
     backward: less memory, more compute. BF16 has FP32-like exponent range and is preferred
@@ -1344,13 +1349,13 @@ add("02_training/13_efficient_distributed_training.ipynb", "Memory-Efficient and
     "Draw a topology for training a model that cannot fit on one node.",
 ])
 
-add("02_training/14_sft_lora_qlora.ipynb", "Supervised Fine-Tuning with LoRA and QLoRA", [
+add("02_training/20_sft_lora_qlora.ipynb", "Supervised Fine-Tuning with LoRA and QLoRA", [
     "Choose among prompting, RAG, full fine-tuning, LoRA, and QLoRA",
     "Explain low-rank adapters mathematically and count trainable parameters",
     "Configure a guarded TRL SFT run with evaluation",
 ], [
     md(r"""
-    ## 14.1 What fine-tuning changes
+    ## 20.1 What fine-tuning changes
 
     Use RAG to supply changing knowledge; use SFT to teach behavior, format, terminology,
     or a task distribution. LoRA freezes base weight \(W\) and learns
@@ -1368,7 +1373,7 @@ add("02_training/14_sft_lora_qlora.ipynb", "Supervised Fine-Tuning with LoRA and
         print(rank, f"{adapter:,}", f"({adapter/full:.3%} of matrix)")
     '''),
     md(r"""
-    ## 14.2 A reproducible SFT configuration
+    ## 20.2 A reproducible SFT configuration
 
     Evaluate the untouched base model first. Freeze dataset/model revisions. Separate
     validation by source or time when duplicates are likely. Inspect rendered chat text.
@@ -1401,7 +1406,7 @@ add("02_training/14_sft_lora_qlora.ipynb", "Supervised Fine-Tuning with LoRA and
         print("Training skipped. Review configuration, then opt in on a suitable GPU.")
     '''),
     md(r"""
-    ## 14.3 Validate the adapter
+    ## 20.3 Validate the adapter
 
     Compare base and adapter on frozen prompts with greedy and sampled runs. Check task
     quality, general capability retention, safety behavior, latency, and adapter load/merge
@@ -1414,13 +1419,13 @@ add("02_training/14_sft_lora_qlora.ipynb", "Supervised Fine-Tuning with LoRA and
     "Run a tiny adapter experiment and report base/adapter results with uncertainty.",
 ])
 
-add("02_training/15_preference_optimization_dpo.ipynb", "Preference Data and Direct Preference Optimization", [
+add("02_training/21_preference_optimization_dpo.ipynb", "Preference Data and Direct Preference Optimization", [
     "Represent chosen/rejected preference pairs and identify data pathologies",
     "Explain the DPO objective relative to a reference policy",
     "Configure a guarded TRL DPO experiment and evaluate behavior",
 ], [
     md(r"""
-    ## 15.1 From demonstrations to preferences
+    ## 21.1 From demonstrations to preferences
 
     SFT learns from desired responses. Preference optimization learns that response
     \(y_w\) is preferred to \(y_l\) for prompt \(x\). Preferences can encode correctness,
@@ -1428,7 +1433,7 @@ add("02_training/15_preference_optimization_dpo.ipynb", "Preference Data and Dir
     training signal. Keep ties/ambiguity, rater metadata, and clear guidelines.
     """),
     md(r"""
-    ## 15.2 DPO intuition
+    ## 21.2 DPO intuition
 
     DPO increases the policy's log-probability advantage for chosen over rejected answers,
     relative to the same advantage under a reference policy. A common loss is
@@ -1484,13 +1489,13 @@ add("02_training/15_preference_optimization_dpo.ipynb", "Preference Data and Dir
 # Module 3 — Hugging Face inference
 # ---------------------------------------------------------------------------
 
-add("02_training/16_reasoning_grpo_verifiable_rewards.ipynb", "Reasoning Post-Training with GRPO and Verifiable Rewards", [
+add("02_training/22_reasoning_grpo_verifiable_rewards.ipynb", "Reasoning Post-Training with GRPO and Verifiable Rewards", [
     "Derive group-relative advantages and distinguish GRPO from SFT, DPO, and PPO",
     "Design auditable outcome, format, and process rewards without rewarding shortcuts",
     "Configure a guarded Hugging Face TRL reasoning run and evaluate quality against inference cost",
 ], [
     md(r"""
-    ## 19.1 From imitation to exploration
+    ## 28.1 From imitation to exploration
 
     SFT increases likelihood of demonstrations; DPO learns from fixed chosen/rejected pairs. Online RL
     samples completions from the current policy, scores them, and changes the policy toward high-reward
@@ -1513,7 +1518,7 @@ add("02_training/16_reasoning_grpo_verifiable_rewards.ipynb", "Reasoning Post-Tr
     print("zero-variance group carries no ranking information")
     ''') ,
     md(r"""
-    ## 19.2 Verifiers and reward contracts
+    ## 28.2 Verifiers and reward contracts
 
     Math answers, compiled code, unit tests, games, and formal constraints permit outcome rewards. Parse a
     clearly delimited final answer, normalize only equivalences you truly accept, and keep the checker
@@ -1540,7 +1545,7 @@ add("02_training/16_reasoning_grpo_verifiable_rewards.ipynb", "Reasoning Post-Tr
     print(exact_math_reward(probes, ["391", "391"]))
     ''') ,
     md(r"""
-    ## 19.3 Policy objective and stability
+    ## 28.3 Policy objective and stability
 
     For sampled token actions, a policy-gradient surrogate multiplies log-probability ratios by advantages.
     Clipping prevents one batch from making arbitrarily large changes. A KL penalty against a reference
@@ -1562,7 +1567,7 @@ add("02_training/16_reasoning_grpo_verifiable_rewards.ipynb", "Reasoning Post-Tr
     print({"ratio": ratio.tolist(), "clipped_objective": surrogate.mean().item()})
     ''') ,
     md(r"""
-    ## 19.4 A guarded TRL configuration
+    ## 28.4 A guarded TRL configuration
 
     TRL's `GRPOTrainer` accepts standard or conversational prompts and one or more reward functions. Extra
     dataset columns are forwarded to custom rewards. Current TRL also supports tools and stateful environment
@@ -1589,7 +1594,7 @@ add("02_training/16_reasoning_grpo_verifiable_rewards.ipynb", "Reasoning Post-Tr
         print("GRPO skipped. Audit rewards, choose a GPU runtime, then opt in.")
     ''') ,
     md(r"""
-    ## 19.5 Reasoning evaluation and inference-time compute
+    ## 28.5 Reasoning evaluation and inference-time compute
 
     Do not grade exposed reasoning prose as if it were faithful cognition. Score final outcomes, robustness
     to irrelevant details and representation changes, calibration, safety, and resource use. Report pass@1
@@ -1608,13 +1613,13 @@ add("02_training/16_reasoning_grpo_verifiable_rewards.ipynb", "Reasoning Post-Tr
     "Create a frozen hidden-test gate that would detect reward hacking before promotion.",
 ])
 
-add("03_huggingface/17_hub_models_inference.ipynb", "The Hub, Model Cards, and Inference", [
+add("03_huggingface/24_hub_models_inference.ipynb", "The Hub, Model Cards, and Inference", [
     "Inspect model metadata, revisions, licenses, and intended use",
     "Load models locally without leaking credentials",
     "Use Hugging Face Inference Providers through one client",
 ], [
     md(r"""
-    ## 17.1 Artifacts and trust
+    ## 24.1 Artifacts and trust
 
     A model repository can contain weights, configuration, tokenizer files, generation
     defaults, chat templates, and custom code. Read the model card and license; pin a commit
@@ -1649,7 +1654,7 @@ add("03_huggingface/17_hub_models_inference.ipynb", "The Hub, Model Cards, and I
     print(tokenizer.decode(new_tokens, skip_special_tokens=True))
     '''),
     md(r"""
-    ## 17.2 Remote inference without provider-specific application code
+    ## 24.2 Remote inference without provider-specific application code
 
     `InferenceClient` routes requests to supported providers. Availability, structured
     output, pricing, and limits vary by model/provider, so keep the model configurable and
@@ -1673,13 +1678,13 @@ add("03_huggingface/17_hub_models_inference.ipynb", "The Hub, Model Cards, and I
     "Write a loader that refuses undeclared or disallowed licenses.",
 ])
 
-add("03_huggingface/18_generation_batching_structured.ipynb", "Generation, Batching, Streaming, and Structured Output", [
+add("03_huggingface/27_generation_batching_structured.ipynb", "Generation, Batching, Streaming, and Structured Output", [
     "Choose decoding parameters based on task requirements",
     "Batch variable-length prompts and separate prompt/output tokens",
     "Stream and validate schema-constrained responses",
 ], [
     md(r"""
-    ## 18.1 Decoding is part of the product contract
+    ## 27.1 Decoding is part of the product contract
 
     Greedy decoding is reproducible but not universally best. Temperature rescales logits;
     top-k keeps k candidates; top-p keeps the smallest set reaching cumulative probability
@@ -1694,7 +1699,7 @@ add("03_huggingface/18_generation_batching_structured.ipynb", "Generation, Batch
         print(temperature, torch.softmax(logits / temperature, -1).numpy().round(3))
     '''),
     md(r"""
-    ## 18.2 Batch locally
+    ## 27.2 Batch locally
 
     Decoder-only models should generally left-pad for batched generation so the final
     non-padding position aligns across examples. Slice each output after the padded input
@@ -1741,7 +1746,7 @@ add("03_huggingface/18_generation_batching_structured.ipynb", "Generation, Batch
         print("Remote cell skipped: HUGGINGFACE_TOKEN is not configured.")
     '''),
     md(r"""
-    ## 18.3 Streaming semantics
+    ## 27.3 Streaming semantics
 
     Streaming improves perceived latency but not necessarily total latency. Clients must
     handle partial UTF-8/text, finish reasons, usage arriving at the end, cancellation,
@@ -1757,13 +1762,13 @@ add("03_huggingface/18_generation_batching_structured.ipynb", "Generation, Batch
 # Module 4 — Retrieval
 # ---------------------------------------------------------------------------
 
-add("04_retrieval/19_embeddings_semantic_search.ipynb", "Embeddings and Semantic Search", [
+add("04_retrieval/28_embeddings_semantic_search.ipynb", "Embeddings and Semantic Search", [
     "Normalize embeddings and implement cosine/dot-product retrieval",
     "Separate bi-encoder retrieval from cross-encoder reranking",
     "Measure recall@k, MRR, latency, and index tradeoffs",
 ], [
     md(r"""
-    ## 19.1 Dense retrieval
+    ## 28.1 Dense retrieval
 
     A bi-encoder maps queries and documents independently into vectors. Precomputed document
     vectors make retrieval fast. With unit-normalized vectors, cosine similarity equals dot
@@ -1805,7 +1810,7 @@ add("04_retrieval/19_embeddings_semantic_search.ipynb", "Embeddings and Semantic
     print("recall@1", recall_at_k(rankings, gold, 1), "MRR", reciprocal_rank(rankings, gold))
     '''),
     md(r"""
-    ## 19.2 Indexes and rerankers
+    ## 28.2 Indexes and rerankers
 
     Exact search scans every vector. Approximate nearest-neighbor indexes trade recall for
     speed/memory using structures such as HNSW or inverted files. A cross-encoder jointly
@@ -1819,13 +1824,13 @@ add("04_retrieval/19_embeddings_semantic_search.ipynb", "Embeddings and Semantic
     "Demonstrate how normalization changes dot-product ranking.",
 ])
 
-add("04_retrieval/20_end_to_end_rag.ipynb", "End-to-End RAG and Retrieval Evaluation", [
+add("04_retrieval/30_end_to_end_rag.ipynb", "End-to-End RAG and Retrieval Evaluation", [
     "Chunk source documents and preserve auditable metadata",
     "Build retrieve → rerank → assemble → generate stages",
     "Evaluate retrieval separately from grounded answer quality",
 ], [
     md(r"""
-    ## 20.1 RAG is a pipeline, not a prompt trick
+    ## 30.1 RAG is a pipeline, not a prompt trick
 
     Ingestion parses sources, chunks text, attaches metadata, embeds, and indexes. Query-time
     processing may rewrite a question, retrieve, filter, rerank, deduplicate, and fit context
@@ -1875,7 +1880,7 @@ add("04_retrieval/20_end_to_end_rag.ipynb", "End-to-End RAG and Retrieval Evalua
     print(build_context(results))
     '''),
     md(r"""
-    ## 20.2 Generation contract
+    ## 30.2 Generation contract
 
     Tell the model to use evidence, admit insufficiency, and cite source IDs. Treat retrieved
     text as untrusted data: it may contain instructions. Context ordering and lost-in-the-
@@ -1893,7 +1898,7 @@ add("04_retrieval/20_end_to_end_rag.ipynb", "End-to-End RAG and Retrieval Evalua
     print(prompt)
     '''),
     md(r"""
-    ## 20.3 Evaluate stages separately
+    ## 30.3 Evaluate stages separately
 
     Retrieval metrics: recall@k, MRR, nDCG, metadata-filter correctness. Generation metrics:
     answer correctness, citation precision/recall, faithfulness/entailment, completeness, and
@@ -1910,13 +1915,13 @@ add("04_retrieval/20_end_to_end_rag.ipynb", "End-to-End RAG and Retrieval Evalua
 # Module 5 — Agents and MCP
 # ---------------------------------------------------------------------------
 
-add("04_retrieval/21_advanced_rag.ipynb", "Advanced RAG: Hybrid Retrieval, Reranking, and Grounded Generation", [
+add("04_retrieval/31_advanced_rag.ipynb", "Advanced RAG: Hybrid Retrieval, Reranking, and Grounded Generation", [
     "Build hybrid lexical/dense retrieval with rank fusion, metadata filters, and reranking",
     "Apply query transformation, contextual compression, and evidence-aware prompt assembly",
     "Evaluate retrieval, answers, citations, latency, and adversarial robustness component by component",
 ], [
     md(r"""
-    ## 29.1 Why advanced RAG is a retrieval system, not a longer prompt
+    ## 39.1 Why advanced RAG is a retrieval system, not a longer prompt
 
     Dense retrieval captures semantic similarity but can miss identifiers, rare names, error codes, and exact
     phrases. Lexical retrieval excels at exact overlap but misses paraphrase. Advanced RAG combines independent
@@ -1940,7 +1945,7 @@ add("04_retrieval/21_advanced_rag.ipynb", "Advanced RAG: Hybrid Retrieval, Reran
     print(query, documents)
     ''') ,
     md(r"""
-    ## 29.2 Hybrid candidate generation and reciprocal-rank fusion
+    ## 39.2 Hybrid candidate generation and reciprocal-rank fusion
 
     BM25 scores term matches with document-frequency and length normalization. Dense bi-encoders embed queries
     and chunks independently for efficient vector search. Retrieve a wider candidate set from each, then fuse
@@ -1978,7 +1983,7 @@ add("04_retrieval/21_advanced_rag.ipynb", "Advanced RAG: Hybrid Retrieval, Reran
     print("lexical:", lexical_order, "dense:", dense_order, "fused:", fused)
     ''') ,
     md(r"""
-    ## 29.3 Reranking and diversity
+    ## 39.3 Reranking and diversity
 
     A cross-encoder jointly reads query and candidate, usually improving precision at higher latency than a
     bi-encoder. Rerank only a bounded candidate pool and batch by token length. Generative rerankers can provide
@@ -2003,7 +2008,7 @@ add("04_retrieval/21_advanced_rag.ipynb", "Advanced RAG: Hybrid Retrieval, Reran
     print("diverse selection:", maximal_marginal_relevance(relevance, similarity))
     ''') ,
     md(r"""
-    ## 29.4 Query transformation and routing
+    ## 39.4 Query transformation and routing
 
     Conversation questions may require history-aware rewriting, but a rewrite can erase constraints or introduce
     facts. Preserve the original query and evaluate rewritten retrieval independently. Multi-query retrieval
@@ -2022,7 +2027,7 @@ add("04_retrieval/21_advanced_rag.ipynb", "Advanced RAG: Hybrid Retrieval, Reran
     print(deterministic_queries(query))
     ''') ,
     md(r"""
-    ## 29.5 Contextual compression and grounded answers
+    ## 39.5 Contextual compression and grounded answers
 
     Contextual compression extracts query-relevant spans from retrieved chunks, reducing distraction and token
     cost. Extraction can remove qualifications, so preserve source offsets and expand enough neighborhood for
@@ -2046,7 +2051,7 @@ add("04_retrieval/21_advanced_rag.ipynb", "Advanced RAG: Hybrid Retrieval, Reran
     print(context)
     ''') ,
     md(r"""
-    ## 29.6 Evaluation matrix
+    ## 39.6 Evaluation matrix
 
     Retrieval metrics require relevance judgments: Recall@k asks whether necessary evidence was retrieved; MRR
     rewards early first relevance; nDCG supports graded relevance; precision measures distractors. Multi-hop tasks
@@ -2076,13 +2081,13 @@ add("04_retrieval/21_advanced_rag.ipynb", "Advanced RAG: Hybrid Retrieval, Reran
     "Attack query rewriting and retrieved context with injection while preserving authorization filters.",
 ])
 
-add("05_agents_mcp/22_tool_calling_agents.ipynb", "Tool Calling and Bounded Agent Loops", [
+add("05_agents_mcp/32_tool_calling_agents.ipynb", "Tool Calling and Bounded Agent Loops", [
     "Define precise JSON tool contracts and validate arguments",
     "Implement a bounded model → tool → observation loop with HF inference",
     "Separate planning flexibility from authorization",
 ], [
     md(r"""
-    ## 22.1 Tools are capability boundaries
+    ## 32.1 Tools are capability boundaries
 
     A tool schema is an interface contract, not a security boundary. Validate types and
     values in code; enforce authentication and authorization outside the model; return
@@ -2137,7 +2142,7 @@ add("05_agents_mcp/22_tool_calling_agents.ipynb", "Tool Calling and Bounded Agen
     print(run_agent("What is (17 * 23) + 9?"))
     '''),
     md(r"""
-    ## 22.2 Reliability controls
+    ## 32.2 Reliability controls
 
     Limit steps, wall time, tokens, tool calls, and spend. Detect repeated identical calls.
     Distinguish read-only tools from reversible and irreversible actions. Require human
@@ -2145,7 +2150,7 @@ add("05_agents_mcp/22_tool_calling_agents.ipynb", "Tool Calling and Bounded Agen
     results, errors, and final output with sensitive fields redacted.
     """),
     md(r"""
-    ## 22.3 Parallel calls, cancellation, and mutation safety
+    ## 32.3 Parallel calls, cancellation, and mutation safety
 
     Execute parallel calls only when they are independent, read-only or separately idempotent, and within a global
     concurrency limit. Preserve tool-call IDs so results return to the correct requests. Cancel outstanding calls when
@@ -2154,7 +2159,7 @@ add("05_agents_mcp/22_tool_calling_agents.ipynb", "Tool Calling and Bounded Agen
 
     Mutating tools accept a host-generated idempotency key and authenticated actor context outside model-controlled
     arguments. Split proposal from commit: the model proposes a typed action, policy validates it, a user may approve
-    its immutable digest, and an executor commits once and returns a receipt. A retry returns that receipt. Notebook 25
+    its immutable digest, and an executor commits once and returns a receipt. A retry returns that receipt. Notebook 35
     turns these rules into a durable workflow.
     """),
     code(r'''
@@ -2176,15 +2181,15 @@ add("05_agents_mcp/22_tool_calling_agents.ipynb", "Tool Calling and Bounded Agen
     "Create an evaluation set for tool selection, arguments, and final answers.",
 ])
 
-add("05_agents_mcp/23_huggingface_smolagents.ipynb", "Building Agents with Hugging Face smolagents", [
+add("05_agents_mcp/33_huggingface_smolagents.ipynb", "Building Agents with Hugging Face smolagents", [
     "Rebuild the explicit agent loop with ToolCallingAgent and understand every abstraction",
     "Compare structured tool calling with code agents, planning, memory, and managed agents",
     "Connect local Transformers, Ollama, or vLLM inference without hiding security boundaries",
 ], [
     md(r"""
-    ## 23.1 Why use a framework after building the loop yourself?
+    ## 33.1 Why use a framework after building the loop yourself?
 
-    Notebook 22 made the control loop explicit: the model proposes an action, trusted code validates and executes it,
+    Notebook 32 made the control loop explicit: the model proposes an action, trusted code validates and executes it,
     the observation returns to context, and deterministic limits decide whether another step is allowed. An agent
     framework packages this state machine, tool schemas, prompting, memory, streaming, and model adapters. It saves
     implementation work but does not own your authorization, data policy, or product correctness.
@@ -2200,7 +2205,7 @@ add("05_agents_mcp/23_huggingface_smolagents.ipynb", "Building Agents with Huggi
     # Colab setup installs it. Locally: uv add smolagents, or keep reading the executable contracts below.
     ''') ,
     md(r"""
-    ## 23.2 Typed tools are contracts
+    ## 33.2 Typed tools are contracts
 
     A tool name and description influence selection; type hints and argument descriptions constrain generation; the
     implementation defines the real capability. Make tools narrow, deterministic where possible, and explicit about
@@ -2229,7 +2234,7 @@ add("05_agents_mcp/23_huggingface_smolagents.ipynb", "Building Agents with Huggi
         print("Expected schema: multiply(a: integer, b: integer) -> integer")
     ''') ,
     md(r"""
-    ## 23.3 ToolCallingAgent versus CodeAgent
+    ## 33.3 ToolCallingAgent versus CodeAgent
 
     `ToolCallingAgent` asks a capable chat model for structured calls. It is a good default when actions fit a small
     schema and every call should be inspectable. `CodeAgent` expresses actions as code, which can compose loops,
@@ -2251,7 +2256,7 @@ add("05_agents_mcp/23_huggingface_smolagents.ipynb", "Building Agents with Huggi
     for task, choice in agent_choice.items(): print(f"{task:24} -> {choice}")
     ''') ,
     md(r"""
-    ## 23.4 Model adapters and a guarded agent
+    ## 33.4 Model adapters and a guarded agent
 
     Agent quality depends on the model's exact chat template and tool-use training. A general text model may emit
     malformed calls even when it writes fluent answers. `smolagents` can connect to Hugging Face inference and local
@@ -2276,7 +2281,7 @@ add("05_agents_mcp/23_huggingface_smolagents.ipynb", "Building Agents with Huggi
         print("Agent run skipped. Configure credentials/model and opt in after reviewing the tool boundary.")
     ''') ,
     md(r"""
-    ## 23.5 Planning, memory, and managed agents
+    ## 33.5 Planning, memory, and managed agents
 
     Planning intervals ask the model to periodically reconsider progress. Planning can help long tasks but consumes
     tokens and may produce confident fiction. A plan is working state, not authorization. Agent memory records task,
@@ -2285,7 +2290,7 @@ add("05_agents_mcp/23_huggingface_smolagents.ipynb", "Building Agents with Huggi
 
     Managed agents let a coordinator delegate to specialists described like tools. Define typed task/result contracts,
     isolate tools and credentials, cap depth and fan-out, and record lineage. Do not share entire histories by default.
-    Notebook 26 develops multi-agent workflow patterns and demonstrates why delegation is an architectural cost, not
+    Notebook 36 develops multi-agent workflow patterns and demonstrates why delegation is an architectural cost, not
     a free accuracy multiplier.
     """),
     code(r'''
@@ -2299,7 +2304,7 @@ add("05_agents_mcp/23_huggingface_smolagents.ipynb", "Building Agents with Huggi
     print(json.dumps([{k:v for k,v in event.items() if k in allowed_trace_fields} for event in trace], indent=2))
     ''') ,
     md(r"""
-    ## 23.6 Testing and portability
+    ## 33.6 Testing and portability
 
     Unit-test tools without a model. Contract-test schemas against the model template. Replay frozen model actions into
     fake tools. Inject timeouts, malformed results, unavailable dependencies, duplicate requests, and permission
@@ -2317,13 +2322,13 @@ add("05_agents_mcp/23_huggingface_smolagents.ipynb", "Building Agents with Huggi
     "Build a fake model adapter that returns malformed, repeated, and unauthorized calls for tests.",
 ])
 
-add("05_agents_mcp/24_mcp_server_hf_client.ipynb", "Building an MCP Server for an HF Agent", [
+add("05_agents_mcp/34_mcp_server_hf_client.ipynb", "Building an MCP Server for an HF Agent", [
     "Distinguish MCP tools, resources, prompts, and transports",
     "Create and inspect a FastMCP server from a notebook",
     "Bridge discovered MCP tools into a Hugging Face agent safely",
 ], [
     md(r"""
-    ## 24.1 MCP standardizes context integration
+    ## 34.1 MCP standardizes context integration
 
     An MCP host connects to servers through clients. Servers expose tools (actions),
     resources (readable context), and prompts (templates). The protocol standardizes
@@ -2377,7 +2382,7 @@ add("05_agents_mcp/24_mcp_server_hf_client.ipynb", "Building an MCP Server for a
     await inspect_server()
     '''),
     md(r"""
-    ## 24.2 Bridge deliberately
+    ## 34.2 Bridge deliberately
 
     Convert MCP schemas to the chat model's tool format, but keep execution in the host.
     Maintain an allowlist by server/tool, validate every argument again, cap response sizes,
@@ -2385,7 +2390,7 @@ add("05_agents_mcp/24_mcp_server_hf_client.ipynb", "Building an MCP Server for a
     authentication and origin controls; local stdio servers inherit process privileges.
     """),
     md(r"""
-    ## 24.3 Full capability surface and lifecycle
+    ## 34.3 Full capability surface and lifecycle
 
     Initialization negotiates a protocol version and capabilities before normal operation. Servers may expose tools,
     resources and templates, prompts, logging, completion suggestions, notifications, and experimental tasks. Clients
@@ -2405,7 +2410,7 @@ add("05_agents_mcp/24_mcp_server_hf_client.ipynb", "Building an MCP Server for a
     for side, capabilities in capability_contract.items(): print(side, "->", ", ".join(capabilities))
     ''') ,
     md(r"""
-    ## 24.4 Transports, authorization, and identity
+    ## 34.4 Transports, authorization, and identity
 
     Stdio is appropriate for a host-launched local subprocess. Credentials come from its environment and should be
     narrowed to that server; stdout belongs to protocol traffic and diagnostics go to stderr. Streamable HTTP requires
@@ -2426,7 +2431,7 @@ add("05_agents_mcp/24_mcp_server_hf_client.ipynb", "Building an MCP Server for a
     print("host decision:", policy.get(requested, {"deny":True}))
     ''') ,
     md(r"""
-    ## 24.5 Sampling, elicitation, tasks, and untrusted content
+    ## 34.5 Sampling, elicitation, tasks, and untrusted content
 
     Sampling requests may include tool choices when the client advertises support. Display or policy-check the proposed
     prompt, cap tokens, restrict tools, and avoid automatically injecting context from unrelated servers. Elicitation
@@ -2459,13 +2464,13 @@ add("05_agents_mcp/24_mcp_server_hf_client.ipynb", "Building an MCP Server for a
 # Module 6 — Evaluation and security
 # ---------------------------------------------------------------------------
 
-add("05_agents_mcp/25_durable_agent_workflows_memory.ipynb", "Durable Agent Workflows, Memory, and Human Approval", [
+add("05_agents_mcp/35_durable_agent_workflows_memory.ipynb", "Durable Agent Workflows, Memory, and Human Approval", [
     "Model agents as resumable state machines with idempotent side effects",
     "Separate working, episodic, semantic, procedural, and user-profile memory",
     "Design pause/resume, approval, cancellation, retries, and recovery for long-running work",
 ], [
     md(r"""
-    ## 25.1 An agent run is a workflow with nondeterministic nodes
+    ## 35.1 An agent run is a workflow with nondeterministic nodes
 
     A chat loop held in process memory disappears on restart and cannot safely wait hours for approval. Production
     work needs explicit state, named transitions, durable checkpoints, and an event history. Model calls are
@@ -2489,7 +2494,7 @@ add("05_agents_mcp/25_durable_agent_workflows_memory.ipynb", "Durable Agent Work
     print(asdict(state))
     ''') ,
     md(r"""
-    ## 25.2 Checkpoints, replay, and side effects
+    ## 35.2 Checkpoints, replay, and side effects
 
     Persist before and after externally visible actions. Retrying a model read is usually wasteful but retrying a
     payment, message, or deployment can duplicate harm. Give mutations stable idempotency keys derived from the
@@ -2511,7 +2516,7 @@ add("05_agents_mcp/25_durable_agent_workflows_memory.ipynb", "Durable Agent Work
     print("retry decision:", "return receipt" if key in state.receipts else "execute")
     ''') ,
     md(r"""
-    ## 25.3 Human-in-the-loop is a state transition
+    ## 35.3 Human-in-the-loop is a state transition
 
     Approval should display the exact effect, target, arguments, data leaving the boundary, estimated cost, and
     rollback limits. Bind approval to an immutable action hash and expiry. If the model changes an argument, request
@@ -2530,7 +2535,7 @@ add("05_agents_mcp/25_durable_agent_workflows_memory.ipynb", "Durable Agent Work
     print(request_approval(state, {"tool":"send_email", "arguments":{"recipient":"owner@example.invalid"}}))
     ''') ,
     md(r"""
-    ## 25.4 Memory is several systems
+    ## 35.4 Memory is several systems
 
     Working memory is the bounded current trajectory. Episodic memory stores past runs and outcomes. Semantic memory
     retrieves durable facts. Procedural memory contains instructions and policies. User-profile memory stores approved
@@ -2552,7 +2557,7 @@ add("05_agents_mcp/25_durable_agent_workflows_memory.ipynb", "Durable Agent Work
     for memory in memories: print(memory["kind"], "model may directly write:", memory["kind"] in writable_by_model)
     ''') ,
     md(r"""
-    ## 25.5 Context engineering and compaction
+    ## 35.5 Context engineering and compaction
 
     Build context from typed state, current task, relevant observations, policies, retrieved memory, and tool schemas
     under an explicit token budget. Drop redundant raw traces only after preserving action receipts and unresolved
@@ -2572,7 +2577,7 @@ add("05_agents_mcp/25_durable_agent_workflows_memory.ipynb", "Durable Agent Work
     print("context:", selected)
     ''') ,
     md(r"""
-    ## 25.6 Cancellation, faults, and framework mapping
+    ## 35.6 Cancellation, faults, and framework mapping
 
     Cancellation must propagate to queued model calls and tools, while acknowledging that an external side effect may
     already have committed. Distinguish transient transport errors, invalid model actions, policy denials, tool-domain
@@ -2590,13 +2595,13 @@ add("05_agents_mcp/25_durable_agent_workflows_memory.ipynb", "Durable Agent Work
     "Test an approval that becomes stale after its proposed arguments change.",
 ])
 
-add("05_agents_mcp/26_multi_agent_workflows.ipynb", "Multi-Agent Workflows and Coordination", [
+add("05_agents_mcp/36_multi_agent_workflows.ipynb", "Multi-Agent Workflows and Coordination", [
     "Implement supervisor-worker, handoff, parallel fan-out, debate, and specialist patterns",
     "Define typed delegation, state isolation, permissions, budgets, and deterministic aggregation",
     "Evaluate whether multiple agents improve outcomes enough to justify coordination cost",
 ], [
     md(r"""
-    ## 26.1 What “multi-agent” means in a workflow
+    ## 36.1 What “multi-agent” means in a workflow
 
     A multi-agent system gives two or more model-controlled roles distinct context, instructions, tools, or authority
     and coordinates their outputs. It may be a supervisor delegating subtasks, a sequence of specialist handoffs,
@@ -2618,7 +2623,7 @@ add("05_agents_mcp/26_multi_agent_workflows.ipynb", "Multi-Agent Workflows and C
     for name, purpose in patterns.items(): print(f"{name:20} | {purpose}")
     ''') ,
     md(r"""
-    ## 26.2 Delegation is a typed contract
+    ## 36.2 Delegation is a typed contract
 
     A task envelope includes objective, inputs by reference, constraints, allowed tools, output schema, budget,
     deadline, provenance, parent run, and success criteria. Workers receive least privilege and only necessary context.
@@ -2640,7 +2645,7 @@ add("05_agents_mcp/26_multi_agent_workflows.ipynb", "Multi-Agent Workflows and C
     print(tasks)
     ''') ,
     md(r"""
-    ## 26.3 Parallel specialists and deterministic aggregation
+    ## 36.3 Parallel specialists and deterministic aggregation
 
     Fan out only independent work. Workers should not mutate shared state concurrently; collect immutable results and
     merge in a deterministic node. Preserve ordering and worker identity. Deduplicate evidence, resolve schema-level
@@ -2661,7 +2666,7 @@ add("05_agents_mcp/26_multi_agent_workflows.ipynb", "Multi-Agent Workflows and C
     print(merged)
     ''') ,
     md(r"""
-    ## 26.4 Supervisors, handoffs, and shared state
+    ## 36.4 Supervisors, handoffs, and shared state
 
     Supervisors decompose work and route results, but an unconstrained supervisor can loop, duplicate tasks, or route
     sensitive data incorrectly. Restrict available roles and validate every envelope. Sequential handoffs are useful
@@ -2680,7 +2685,7 @@ add("05_agents_mcp/26_multi_agent_workflows.ipynb", "Multi-Agent Workflows and C
     print("deterministic boundary routes to:", next_owner)
     ''') ,
     md(r"""
-    ## 26.5 Critics, debate, and diversity
+    ## 36.5 Critics, debate, and diversity
 
     A critic should use an independent rubric or verifier, not merely echo the proposer. Blind worker identity and
     randomize ordering to reduce position and authority bias. Debate can surface assumptions but can also converge on
@@ -2699,7 +2704,7 @@ add("05_agents_mcp/26_multi_agent_workflows.ipynb", "Multi-Agent Workflows and C
     print("accepted:", verified, "unresolved dissent:", [p for p in proposals if p not in verified])
     ''') ,
     md(r"""
-    ## 26.6 Multi-agent security and evaluation
+    ## 36.6 Multi-agent security and evaluation
 
     Give workers distinct service identities, tool allowlists, data scopes, and network boundaries. Do not forward one
     worker's credentials or raw context to another. Label messages by authenticated origin outside model text. Treat
@@ -2718,13 +2723,13 @@ add("05_agents_mcp/26_multi_agent_workflows.ipynb", "Multi-Agent Workflows and C
     "Inject a malicious worker message and prove it cannot expand another worker's permissions.",
 ])
 
-add("05_agents_mcp/27_agent_evaluation_sandboxing.ipynb", "Agent Evaluation, Sandboxing, and Trajectory Observability", [
+add("05_agents_mcp/37_agent_evaluation_sandboxing.ipynb", "Agent Evaluation, Sandboxing, and Trajectory Observability", [
     "Evaluate decisions, trajectories, effects, and resource use rather than final text alone",
     "Build deterministic simulated tools, replay tests, fault injection, and approval assertions",
     "Threat-model browser, coding, computer-use, and long-running agents with enforceable sandboxes",
 ], [
     md(r"""
-    ## 27.1 The trajectory is the product behavior
+    ## 37.1 The trajectory is the product behavior
 
     Two agents can return the same answer while one leaked data, called unnecessary tools, ignored a denial, or spent
     ten times the budget. Evaluation units include task, decision step, tool call, observation, state transition,
@@ -2747,7 +2752,7 @@ add("05_agents_mcp/27_agent_evaluation_sandboxing.ipynb", "Agent Evaluation, San
            "unnecessary_tools":len(actual_tools-expected_tools), "steps":len(trace)})
     ''') ,
     md(r"""
-    ## 27.2 Deterministic environments and replay
+    ## 37.2 Deterministic environments and replay
 
     Replace live tools with versioned fakes in CI. A scenario defines initial state, observations, permitted actions,
     injected failures, hidden assertions, and terminal conditions. Replay captured model actions into the same fake to
@@ -2773,7 +2778,7 @@ add("05_agents_mcp/27_agent_evaluation_sandboxing.ipynb", "Agent Evaluation, San
     assert ledger.calls == [("lookup","A"),("lookup","A")]
     ''') ,
     md(r"""
-    ## 27.3 Fault and adversarial matrix
+    ## 37.3 Fault and adversarial matrix
 
     Inject malformed model JSON, unknown tools, schema violations, oversized observations, tool timeouts, rate limits,
     stale state, duplicate delivery, partial streams, worker crashes, permission revocation, cancellation, poisoned
@@ -2791,7 +2796,7 @@ add("05_agents_mcp/27_agent_evaluation_sandboxing.ipynb", "Agent Evaluation, San
     print(*cases, sep="\n")
     ''') ,
     md(r"""
-    ## 27.4 Browser, computer-use, and coding sandboxes
+    ## 37.4 Browser, computer-use, and coding sandboxes
 
     Browser/computer agents observe partial, changing state. DOM elements move, screenshots become stale, pages contain
     hostile instructions, and clicks can purchase, publish, or delete. Re-observe before consequential actions, bind
@@ -2810,7 +2815,7 @@ add("05_agents_mcp/27_agent_evaluation_sandboxing.ipynb", "Agent Evaluation, San
     print(sandbox_policy)
     ''') ,
     md(r"""
-    ## 27.5 Observability without surveillance
+    ## 37.5 Observability without surveillance
 
     Trace model calls, validation, policy, queueing, tools, approvals, and effects with correlation IDs and durations.
     Record model/template/tool/policy revisions, token counts, retries, stop reason, state version, and redacted error
@@ -2830,7 +2835,7 @@ add("05_agents_mcp/27_agent_evaluation_sandboxing.ipynb", "Agent Evaluation, San
            "tokens_per_success":sum(e["tokens"] for e in events)/max(1,sum(e["status"]=="success" for e in events))})
     ''') ,
     md(r"""
-    ## 27.6 Release evaluation
+    ## 37.6 Release evaluation
 
     Build task suites from representative workflows, rare consequential actions, production failures, and adversarial
     scenarios. Split development from frozen release gates. Compare prompts, models, frameworks, and multi-agent designs
@@ -2847,13 +2852,13 @@ add("05_agents_mcp/27_agent_evaluation_sandboxing.ipynb", "Agent Evaluation, San
     "Threat-model a coding agent sandbox and demonstrate why language-level restrictions are insufficient.",
 ])
 
-add("06_evaluation_security/28_evaluation_fundamentals.ipynb", "Evaluation Fundamentals and Regression Testing", [
+add("06_evaluation_security/38_evaluation_fundamentals.ipynb", "Evaluation Fundamentals and Regression Testing", [
     "Turn product requirements into representative datasets and graders",
     "Combine deterministic, statistical, retrieval, model-based, and human evaluation",
     "Compare systems with slices, uncertainty, and regression gates",
 ], [
     md(r"""
-    ## 28.1 Begin with decisions
+    ## 38.1 Begin with decisions
 
     An evaluation is evidence for a decision: ship a prompt, choose a model, accept a
     training run, or diagnose a failure. Define the unit, population, success criterion,
@@ -2874,7 +2879,7 @@ add("06_evaluation_security/28_evaluation_fundamentals.ipynb", "Evaluation Funda
         print(row)
     '''),
     md(r"""
-    ## 28.2 Match graders to failure modes
+    ## 38.2 Match graders to failure modes
 
     Use executable tests for code, schema validators for structure, exact/set comparison for
     constrained answers, retrieval metrics for ranking, and expert review for domain nuance.
@@ -2892,7 +2897,7 @@ add("06_evaluation_security/28_evaluation_fundamentals.ipynb", "Evaluation Funda
     print(f"score={mean:.3f}, illustrative bootstrap interval=({lo:.3f}, {hi:.3f})")
     '''),
     md(r"""
-    ## 28.3 Comparisons and gates
+    ## 38.3 Comparisons and gates
 
     Pair outputs by example when comparing systems. Report delta and confidence interval,
     not two isolated averages. Slice by language, length, risk, source, tool, and no-answer
@@ -2906,13 +2911,13 @@ add("06_evaluation_security/28_evaluation_fundamentals.ipynb", "Evaluation Funda
     "Compare two systems with a paired bootstrap and slice table.",
 ])
 
-add("06_evaluation_security/29_llm_as_a_judge.ipynb", "LLM as a Judge", [
+add("06_evaluation_security/39_llm_as_a_judge.ipynb", "LLM as a Judge", [
     "Design a criterion-level rubric and structured judge output",
     "Run pointwise and order-swapped pairwise judging with HF models",
     "Calibrate judge agreement and route uncertainty to humans",
 ], [
     md(r"""
-    ## 29.1 A judge is a measurement instrument
+    ## 39.1 A judge is a measurement instrument
 
     Separate correctness, relevance, completeness, and clarity. Define anchored score levels,
     decisive evidence, critical errors, and tie behavior. Candidate text is untrusted data.
@@ -2964,7 +2969,7 @@ add("06_evaluation_security/29_llm_as_a_judge.ipynb", "LLM as a Judge", [
         "It accumulates gradients from several microbatches before one optimizer update."))
     '''),
     md(r"""
-    ## 29.2 Bias controls
+    ## 39.2 Bias controls
 
     Pairwise judges can prefer answer position, verbosity, familiar style, or their own model
     family. Randomize hidden labels and judge both A/B and B/A; mark inconsistent pairs for
@@ -2985,13 +2990,13 @@ add("06_evaluation_security/29_llm_as_a_judge.ipynb", "LLM as a Judge", [
     "Calibrate two judge models against at least 50 human-labeled examples.",
 ])
 
-add("06_evaluation_security/30_llm_application_security.ipynb", "LLM Application Security", [
+add("06_evaluation_security/41_llm_application_security.ipynb", "LLM Application Security", [
     "Threat-model prompt injection, exfiltration, unsafe tools, and resource abuse",
     "Apply least privilege, validation, isolation, and approval controls",
     "Build adversarial tests and distinguish safety classification from security",
 ], [
     md(r"""
-    ## 30.1 Trust boundaries
+    ## 41.1 Trust boundaries
 
     System prompts, user text, retrieved documents, web pages, tool results, MCP resources,
     and model output have different origins but share one context window. Instructions in
@@ -3010,7 +3015,7 @@ add("06_evaluation_security/30_llm_application_security.ipynb", "LLM Application
     print("Delimiting preserves provenance for policy/evaluation; it does not neutralize text.")
     '''),
     md(r"""
-    ## 30.2 Defense in depth
+    ## 41.2 Defense in depth
 
     - Give each tool the minimum identity, scope, network access, and filesystem access.
     - Validate arguments against schemas plus semantic allowlists.
@@ -3037,7 +3042,7 @@ add("06_evaluation_security/30_llm_application_security.ipynb", "LLM Application
         except ValueError as exc: print("blocked", url, exc)
     '''),
     md(r"""
-    ## 30.3 Test the abuse cases
+    ## 41.3 Test the abuse cases
 
     Maintain direct/indirect injection, encoded instructions, conflicting sources, tool
     argument attacks, SSRF paths, cross-tenant identifiers, oversized content, repeated-call
@@ -3047,7 +3052,7 @@ add("06_evaluation_security/30_llm_application_security.ipynb", "LLM Application
     """),
 ], [
     "Draw a data-flow diagram and mark every trust/authorization boundary.",
-    "Attack the RAG prompt from Notebook 20 and add deterministic mitigations.",
+    "Attack the RAG prompt from Notebook 30 and add deterministic mitigations.",
     "Write ten security invariants that can be checked without an LLM judge.",
 ])
 
@@ -3055,13 +3060,13 @@ add("06_evaluation_security/30_llm_application_security.ipynb", "LLM Application
 # Module 7 — Multimodal
 # ---------------------------------------------------------------------------
 
-add("06_evaluation_security/31_experiment_tracking_model_governance.ipynb", "Experiment Tracking, Model Governance, and Release Engineering", [
+add("06_evaluation_security/42_experiment_tracking_model_governance.ipynb", "Experiment Tracking, Model Governance, and Release Engineering", [
     "Define immutable lineage across code, data, models, prompts, evaluation, and serving",
     "Build reproducibility manifests, model cards, promotion gates, and rollback records",
     "Separate technical evidence from ownership, approval, risk, privacy, and license decisions",
 ], [
     md(r"""
-    ## 31.1 The model is a dependency graph
+    ## 42.1 The model is a dependency graph
 
     A deployed LLM behavior is produced by weights, tokenizer, chat template, adapters, retrieval indexes,
     prompts, tool schemas, decoding parameters, safety policies, inference engine, and hardware. Recording only
@@ -3087,7 +3092,7 @@ add("06_evaluation_security/31_experiment_tracking_model_governance.ipynb", "Exp
     print(json.dumps(manifest, indent=2))
     ''') ,
     md(r"""
-    ## 31.2 Run records and reproducibility
+    ## 42.2 Run records and reproducibility
 
     Capture code commit and dirty-state diff, dependency lock, container digest, hardware/driver/runtime, seeds,
     precision, distributed topology, environment variables by name but never secret values, input artifact hashes,
@@ -3107,7 +3112,7 @@ add("06_evaluation_security/31_experiment_tracking_model_governance.ipynb", "Exp
     print("manifest identity:", sha256_bytes(canonical))
     ''') ,
     md(r"""
-    ## 31.3 Data, licensing, and privacy lineage
+    ## 42.3 Data, licensing, and privacy lineage
 
     Dataset lineage includes sources, acquisition dates, licenses, consent or lawful basis where applicable,
     transformations, filters, deduplication, splits, synthetic generators, human annotation guidance, removals,
@@ -3131,7 +3136,7 @@ add("06_evaluation_security/31_experiment_tracking_model_governance.ipynb", "Exp
     print("adapter ancestry:", ancestors("adapter-v7"))
     ''') ,
     md(r"""
-    ## 31.4 Evaluation evidence and promotion gates
+    ## 42.4 Evaluation evidence and promotion gates
 
     A promotion compares a candidate with the currently approved baseline on frozen target capability, general
     retention, safety/security, calibration, subgroup slices, latency, throughput, and cost. Define thresholds and
@@ -3155,7 +3160,7 @@ add("06_evaluation_security/31_experiment_tracking_model_governance.ipynb", "Exp
     print("promote:", all(passes(g) or not g["blocking"] for g in gates))
     ''') ,
     md(r"""
-    ## 31.5 Model cards, system cards, and accountability
+    ## 42.5 Model cards, system cards, and accountability
 
     A model card documents architecture, provenance, training, evaluations, intended uses, excluded uses, biases,
     limitations, environmental/compute information, license, and contact. A system card expands to retrieval, tools,
@@ -3168,7 +3173,7 @@ add("06_evaluation_security/31_experiment_tracking_model_governance.ipynb", "Exp
     consequence—not parameter count alone.
     """),
     md(r"""
-    ## 31.6 Rollout, monitoring, rollback, and retirement
+    ## 42.6 Rollout, monitoring, rollback, and retirement
 
     Use immutable release bundles, staging, shadow traffic, small canaries, progressive exposure, and automatic
     rollback criteria. Monitor quality proxies cautiously alongside errors, latency, token usage, refusals, retrieval
@@ -3187,13 +3192,13 @@ add("06_evaluation_security/31_experiment_tracking_model_governance.ipynb", "Exp
     "Write a rollback drill that includes tokenizer, prompt, retrieval index, and inference engine.",
 ])
 
-add("07_multimodal/32_vision_language_models.ipynb", "Vision-Language Models and Document Understanding", [
+add("07_multimodal/43_vision_language_models.ipynb", "Vision-Language Models and Document Understanding", [
     "Understand processor inputs, image tokens, resolution, and memory costs",
     "Run a guarded Hugging Face image-text-to-text example",
     "Evaluate OCR, charts, spatial reasoning, and grounded structured output",
 ], [
     md(r"""
-    ## 32.1 A multimodal request has two representations
+    ## 43.1 A multimodal request has two representations
 
     A processor transforms images (resize/crop/normalize/patchify) and text (tokenize/chat
     template) into model inputs. Visual encoders or native multimodal blocks create visual
@@ -3223,7 +3228,7 @@ add("07_multimodal/32_vision_language_models.ipynb", "Vision-Language Models and
         print("Remote example skipped: configure HUGGINGFACE_TOKEN.")
     '''),
     md(r"""
-    ## 32.2 Documents are not just images
+    ## 43.2 Documents are not just images
 
     PDFs may contain extractable text, tables, reading order, vector graphics, scans, and
     metadata. Prefer native extraction where reliable; use OCR/VLMs for visual structure and
@@ -3231,7 +3236,7 @@ add("07_multimodal/32_vision_language_models.ipynb", "Vision-Language Models and
     retain evidence regions. Defend against visual prompt injection in screenshots/documents.
     """),
     md(r"""
-    ## 32.3 Evaluate by capability
+    ## 43.3 Evaluate by capability
 
     Use exact field accuracy for extraction, normalized edit distance for OCR, table cell
     metrics, bounding-box overlap for grounding, and expert labels for chart reasoning.
@@ -3248,13 +3253,13 @@ add("07_multimodal/32_vision_language_models.ipynb", "Vision-Language Models and
 # Module 8 — Production
 # ---------------------------------------------------------------------------
 
-add("08_production/33_reliability_observability.ipynb", "Reliability, Observability, and Load Testing", [
+add("08_production/44_reliability_observability.ipynb", "Reliability, Observability, and Load Testing", [
     "Instrument latency, tokens, errors, quality, and cost with safe metadata",
     "Implement bounded concurrency, retries, cancellation, and backpressure",
     "Design load tests and deployment regression gates",
 ], [
     md(r"""
-    ## 33.1 Observe the full request lifecycle
+    ## 44.1 Observe the full request lifecycle
 
     Correlate request ID, trace ID, tenant-safe identifier, model/revision, prompt version,
     decoding config, queue time, TTFT, generation time, input/output tokens, finish reason,
@@ -3292,7 +3297,7 @@ add("08_production/33_reliability_observability.ipynb", "Reliability, Observabil
     print(results)
     '''),
     md(r"""
-    ## 33.2 Failure policy
+    ## 44.2 Failure policy
 
     Retry only transient, idempotent operations; respect server retry hints; add jitter; cap
     attempts and total deadline. Bound queues and concurrency—unbounded retries amplify
@@ -3301,7 +3306,7 @@ add("08_production/33_reliability_observability.ipynb", "Reliability, Observabil
     but can synchronize failures without randomized recovery.
     """),
     md(r"""
-    ## 33.3 Load and regression testing
+    ## 44.3 Load and regression testing
 
     Replay realistic distributions of prompt length, output length, streaming, retrieval,
     and tool use. Warm the system, increase offered load, and report p50/p95/p99 TTFT and
@@ -3315,13 +3320,13 @@ add("08_production/33_reliability_observability.ipynb", "Reliability, Observabil
     "Design a privacy-preserving trace sampling and retention policy.",
 ])
 
-add("08_production/34_quantization_model_formats.ipynb", "Quantization and Deployment Model Formats", [
+add("08_production/45_quantization_model_formats.ipynb", "Quantization and Deployment Model Formats", [
     "Distinguish weight, activation, and KV-cache quantization across training and serving",
     "Compare bitsandbytes, GPTQ, AWQ, FP8, GGUF, and Safetensors without conflating format and method",
     "Design calibration and quality-performance evaluations before producing deployment artifacts",
 ], [
     md(r"""
-    ## 34.1 Quantization changes representation and sometimes computation
+    ## 45.1 Quantization changes representation and sometimes computation
 
     Quantization represents values with fewer bits or restricted numeric formats to reduce memory bandwidth,
     capacity, and sometimes latency. Weight-only quantization compresses parameters while activations remain at
@@ -3339,7 +3344,7 @@ add("08_production/34_quantization_model_formats.ipynb", "Quantization and Deplo
     print("Scales, zero-points, metadata, temporary buffers, and KV cache are additional.")
     ''') ,
     md(r"""
-    ## 34.2 Numeric model
+    ## 45.2 Numeric model
 
     Uniform affine quantization maps values approximately as `q = clamp(round(x/scale) + zero_point)` and
     reconstructs `x_hat = scale*(q-zero_point)`. Per-channel scales preserve different output-channel ranges;
@@ -3362,7 +3367,7 @@ add("08_production/34_quantization_model_formats.ipynb", "Quantization and Deplo
            "mae": (x-restored).abs().mean().item(), "max_error": (x-restored).abs().max().item()})
     ''') ,
     md(r"""
-    ## 34.3 Method and container are different layers
+    ## 45.3 Method and container are different layers
 
     Safetensors is a safe, efficiently loadable tensor container; it does not imply a precision. Transformers
     repositories combine weights with config, tokenizer, chat template, and generation metadata. bitsandbytes
@@ -3386,7 +3391,7 @@ add("08_production/34_quantization_model_formats.ipynb", "Quantization and Deplo
     for row in matrix: print(" | ".join(row))
     ''') ,
     md(r"""
-    ## 34.4 Calibration and sensitivity
+    ## 45.4 Calibration and sensitivity
 
     Calibration samples should represent deployment languages, domains, lengths, modalities, chat templates, and
     activation outliers. Hundreds of copied generic sentences may optimize the wrong distribution. Keep calibration
@@ -3407,7 +3412,7 @@ add("08_production/34_quantization_model_formats.ipynb", "Quantization and Deplo
     print(results, "quality gate:", results["task_accuracy"] >= -.01 and results["schema_validity"] >= -.005)
     ''') ,
     md(r"""
-    ## 34.5 Hugging Face loading pattern
+    ## 45.5 Hugging Face loading pattern
 
     Transformers integrates quantization configurations, but support depends on model, hardware, Accelerate,
     library versions, and the installed backend. The guarded pattern below documents intent without pretending a
@@ -3430,7 +3435,7 @@ add("08_production/34_quantization_model_formats.ipynb", "Quantization and Deplo
         print("4-bit load skipped; requires a supported accelerator and bitsandbytes installation.")
     ''') ,
     md(r"""
-    ## 34.6 Benchmark, publish, and roll back
+    ## 45.6 Benchmark, publish, and roll back
 
     Measure artifact bytes, peak resident memory, maximum sustainable concurrent tokens, TTFT, inter-token latency,
     total tokens/second, energy/cost, cold-load time, and quality. Warm up kernels and report hardware, engine,
@@ -3448,13 +3453,13 @@ add("08_production/34_quantization_model_formats.ipynb", "Quantization and Deplo
     "Write a derivative model card containing every conversion and rollback artifact.",
 ])
 
-add("08_production/35_serving_engine_comparison.ipynb", "Choosing an Open-Model Serving Engine", [
+add("08_production/46_serving_engine_comparison.ipynb", "Choosing an Open-Model Serving Engine", [
     "Compare Transformers, llama.cpp/MLX, Ollama, vLLM, SGLang, and managed HF endpoints by workload",
     "Build protocol conformance and quality/performance benchmark contracts",
     "Avoid architecture decisions based on feature checklists without hardware-specific evidence",
 ], [
     md(r"""
-    ## 35.1 Start with the workload
+    ## 46.1 Start with the workload
 
     Engine selection follows constraints: model architectures and formats, accelerator/CPU platform, single-user
     versus concurrent traffic, prompt/output distributions, latency SLOs, adapters, structured output, tools,
@@ -3481,7 +3486,7 @@ add("08_production/35_serving_engine_comparison.ipynb", "Choosing an Open-Model 
     print("Illustrative scores force priorities; replace with measured evidence.")
     ''') ,
     md(r"""
-    ## 35.2 A compatibility matrix is versioned evidence
+    ## 46.2 A compatibility matrix is versioned evidence
 
     Test the exact model and engine image for tokenizer/chat-template behavior, context length, streaming, logprobs,
     seed handling, stop strings, JSON Schema, tools, reasoning fields, embeddings, LoRA, quantizations, speculative
@@ -3499,7 +3504,7 @@ add("08_production/35_serving_engine_comparison.ipynb", "Choosing an Open-Model 
     for engine, features in observed.items(): print(engine, "missing:", sorted(required_contract-features))
     ''') ,
     md(r"""
-    ## 35.3 Performance methodology
+    ## 46.3 Performance methodology
 
     Separate cold model load, prefill/TTFT, decode/inter-token latency, end-to-end percentiles, and aggregate prompt/
     output tokens per second. Use realistic length distributions, arrival processes, concurrency, cancellations, and
@@ -3519,7 +3524,7 @@ add("08_production/35_serving_engine_comparison.ipynb", "Choosing an Open-Model 
            "output_tokens_per_wall_second": sum(x["output"] for x in samples)/max(x["latency"] for x in samples)})
     ''') ,
     md(r"""
-    ## 35.4 Memory, batching, and topology
+    ## 46.4 Memory, batching, and topology
 
     Capacity includes weights, KV cache for all live tokens, workspaces, graphs, adapter state, runtime overhead, and
     fragmentation. Quantization reduces selected components, not all memory. Prefix caching benefits repeated exact
@@ -3537,7 +3542,7 @@ add("08_production/35_serving_engine_comparison.ipynb", "Choosing an Open-Model 
     for tokens in [8_000, 64_000, 256_000]: print(tokens, round(kv_gib(32, 8, 128, tokens), 2), "GiB KV")
     ''') ,
     md(r"""
-    ## 35.5 Operations and security
+    ## 46.5 Operations and security
 
     Require readiness distinct from liveness, graceful drain, bounded queues, admission control by total tokens,
     deadlines, cancellation propagation, per-tenant limits, and observable queue/prefill/decode stages. Pin container,
@@ -3549,7 +3554,7 @@ add("08_production/35_serving_engine_comparison.ipynb", "Choosing an Open-Model 
     downloads. The inference engine must not become the authorization layer for tools or retrieval.
     """),
     md(r"""
-    ## 35.6 Decision process
+    ## 46.6 Decision process
 
     Shortlist engines that satisfy hard compatibility, platform, license, and security constraints. Run conformance
     and frozen quality tests, then benchmark viable candidates on target hardware. Estimate operational cost and
@@ -3566,13 +3571,13 @@ add("08_production/35_serving_engine_comparison.ipynb", "Choosing an Open-Model 
     "Create an architecture decision record with explicit reconsideration triggers.",
 ])
 
-add("08_production/36_ollama_local_serving.ipynb", "Local Model Serving with Ollama", [
+add("08_production/47_ollama_local_serving.ipynb", "Local Model Serving with Ollama", [
     "Choose Ollama for local, private, low-operations inference and distinguish it from vLLM",
     "Package a model with a Modelfile and use native and OpenAI-compatible HTTP APIs",
     "Implement structured output, embeddings, streaming, benchmarking, and production safeguards",
 ], [
     md(r"""
-    ## 36.1 Where Ollama fits
+    ## 47.1 Where Ollama fits
 
     Ollama packages model acquisition, quantized local inference, prompt templates, and an HTTP server
     behind a small developer interface. It is especially useful for laptops, workstations, offline or
@@ -3608,7 +3613,7 @@ add("08_production/36_ollama_local_serving.ipynb", "Local Model Serving with Oll
     print(f"If needed, run in a terminal: ollama pull {OLLAMA_MODEL}")
     ''') ,
     md(r"""
-    ## 36.2 Model lifecycle and reproducibility
+    ## 47.2 Model lifecycle and reproducibility
 
     Model names include tags, and tags may move. Record the resolved model metadata and digest with your
     application release. Pulling weights is a material network/storage operation, so it remains an explicit
@@ -3647,7 +3652,7 @@ add("08_production/36_ollama_local_serving.ipynb", "Local Model Serving with Oll
         print("Skipped: start Ollama and pull the configured model first.")
     ''') ,
     md(r"""
-    ## 36.3 Streaming and portable clients
+    ## 47.3 Streaming and portable clients
 
     The native API can stream newline-delimited JSON chunks. A robust client uses incremental parsing,
     handles timeouts and disconnects, distinguishes transport failure from model refusal, and records usage
@@ -3675,7 +3680,7 @@ add("08_production/36_ollama_local_serving.ipynb", "Local Model Serving with Oll
         print("Portable API example skipped; server/model unavailable.")
     ''') ,
     md(r"""
-    ## 36.4 Structured output is constrained generation plus validation
+    ## 47.4 Structured output is constrained generation plus validation
 
     The native chat API accepts JSON or a JSON Schema in `format`; the compatible API exposes structured
     response formats where supported. Constraining decoding reduces malformed syntax, but a schema cannot
@@ -3701,7 +3706,7 @@ add("08_production/36_ollama_local_serving.ipynb", "Local Model Serving with Oll
         print("Structured-output example skipped; schema construction still ran.")
     ''') ,
     md(r"""
-    ## 36.5 Local embeddings and RAG
+    ## 47.5 Local embeddings and RAG
 
     `/api/embed` accepts one string or a list and returns vectors. Use a model intended for embeddings;
     generation-model hidden states are not automatically good retrieval vectors. Pin the embedding model and
@@ -3722,13 +3727,13 @@ add("08_production/36_ollama_local_serving.ipynb", "Local Model Serving with Oll
         print(f"Skipped. Optional setup: ollama pull {EMBEDDING_MODEL}")
     ''') ,
     md(r"""
-    ## 36.6 Benchmark and operate the service you actually have
+    ## 47.6 Benchmark and operate the service you actually have
 
     Separate cold-load time, time to first token, prompt evaluation rate, generation rate, end-to-end latency,
     and concurrency. Ollama responses expose nanosecond duration and token-count fields; convert units and avoid
     mixing prefill with decode throughput. Run warmups, use realistic prompt/output lengths, report quantization
     and resident memory, and include p50/p95/p99 rather than averages alone. Compare quality before declaring a
-    smaller quantization “faster.” Notebook 33 supplies a more complete load-test discipline.
+    smaller quantization “faster.” Notebook 44 supplies a more complete load-test discipline.
 
     Bind to loopback unless remote access is intentional. If exposed, place authentication, TLS, rate limits,
     request-size limits, tenant isolation, and audit controls in a trusted reverse proxy or application layer.
@@ -3764,13 +3769,13 @@ add("08_production/36_ollama_local_serving.ipynb", "Local Model Serving with Oll
     "Threat-model exposing Ollama beyond localhost and design the required gateway controls.",
 ])
 
-add("08_production/37_vllm_serving.ipynb", "Serving Open Models with vLLM", [
+add("08_production/48_vllm_serving.ipynb", "Serving Open Models with vLLM", [
     "Launch and call an OpenAI-compatible vLLM server",
     "Relate continuous batching and paged KV management to throughput",
     "Plan capacity, parallelism, structured output, monitoring, and secure deployment",
 ], [
     md(r"""
-    ## 37.1 Serving changes the optimization target
+    ## 48.1 Serving changes the optimization target
 
     Local `generate()` is useful for experiments. A server must schedule concurrent requests,
     manage variable KV-cache allocations, stream, reject overload, expose health/metrics, and
@@ -3778,7 +3783,7 @@ add("08_production/37_vllm_serving.ipynb", "Serving Open Models with vLLM", [
     admits new sequences as others finish; block-based KV management reduces fragmentation.
     """),
     md(r"""
-    ## 37.2 Start on a supported accelerator host
+    ## 48.2 Start on a supported accelerator host
 
     Install vLLM according to the current accelerator-specific instructions, then run:
 
@@ -3809,7 +3814,7 @@ add("08_production/37_vllm_serving.ipynb", "Serving Open Models with vLLM", [
         print("Start the vLLM server, then rerun:", type(exc).__name__)
     '''),
     md(r"""
-    ## 37.3 Structured output and APIs
+    ## 48.3 Structured output and APIs
 
     Current vLLM releases support OpenAI-compatible chat/completions plus health, model, and
     Prometheus metrics endpoints. Structured constraints are passed in the current
@@ -3824,7 +3829,7 @@ add("08_production/37_vllm_serving.ipynb", "Serving Open Models with vLLM", [
     print(payload_extension)
     '''),
     md(r"""
-    ## 37.4 Scale only after measuring
+    ## 48.4 Scale only after measuring
 
     Tensor parallelism shards a model across GPUs; data parallelism replicates it for more
     traffic; pipeline/expert parallelism address other model/topology constraints. Communication
@@ -3842,6 +3847,9 @@ add("08_production/37_vllm_serving.ipynb", "Serving Open Models with vLLM", [
 ])
 
 def write_course() -> None:
+    from course_extensions import register
+    register(add, md, code)
+    LESSONS.sort(key=lambda item: int(Path(item[0]).stem.split("_", 1)[0]))
     for path, title, cells in LESSONS:
         target = ROOT / path
         target.parent.mkdir(parents=True, exist_ok=True)

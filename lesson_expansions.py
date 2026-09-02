@@ -7,9 +7,9 @@ def lesson(number: int, *cells: tuple[str, str]) -> None:
     EXPANSIONS[number] = list(cells)
 
 
-lesson(1,
+lesson(4,
     ("md", r"""
-    ## 1.4 How modern subword tokenizers are built
+    ## 4.4 How modern subword tokenizers are built
 
     A useful tokenizer must be lossless, reasonably compact, fast, and stable across the
     model's target languages and domains. Byte-level BPE begins with bytes, so every input is
@@ -47,7 +47,7 @@ lesson(1,
     print("vocabulary size:", tokenizer.vocab_size)
     '''),
     ("md", r"""
-    ## 1.5 Sequence construction, boundaries, and label masking
+    ## 4.5 Sequence construction, boundaries, and label masking
 
     Language-model examples are usually concatenated and sliced into fixed-length blocks.
     Boundaries matter. Without EOS separators, the model is trained to continue the end of one
@@ -78,7 +78,7 @@ lesson(1,
     print("\ncausal visibility mask (query rows, key columns):\n", allowed)
     '''),
     ("md", r"""
-    ## 1.6 Context windows and practical token budgets
+    ## 4.6 Context windows and practical token budgets
 
     A context limit covers prompt, chat-control tokens, retrieved evidence, tool schemas and
     results, prior messages, and generated output. Reserving no output budget is a common bug.
@@ -97,9 +97,9 @@ lesson(1,
     """),
 )
 
-lesson(2,
+lesson(5,
     ("md", r"""
-    ## 2.4 Log-sum-exp, token reduction, and masking
+    ## 5.4 Log-sum-exp, token reduction, and masking
 
     Stable cross-entropy is normally implemented without constructing probabilities explicitly:
 
@@ -140,7 +140,7 @@ lesson(2,
     print("equal-example mean:", example_mean.item())
     '''),
     ("md", r"""
-    ## 2.5 Backpropagation beyond the final logits
+    ## 5.5 Backpropagation beyond the final logits
 
     The elegant gradient `p - y` is only the start. The chain rule propagates it through the
     LM head, residual stream, attention, MLPs, embeddings, and earlier tokens. Shared/tied input
@@ -173,7 +173,7 @@ lesson(2,
         print(step, f"loss={loss.item():.4f}", f"grad={grad_norm:.4f}", f"update={update:.4f}")
     '''),
     ("md", r"""
-    ## 2.6 Perplexity, entropy, and calibration reference
+    ## 5.6 Perplexity, entropy, and calibration reference
 
     Perplexity exponentiates average NLL. It is sensitive to tokenizer, domain, sequence
     boundary policy, masking, and reduction. It is useful for comparing checkpoints under one
@@ -190,9 +190,9 @@ lesson(2,
     """),
 )
 
-lesson(3,
+lesson(7,
     ("md", r"""
-    ## 3.3 Complete decoder data flow
+    ## 7.3 Complete decoder data flow
 
     A decoder-only transformer performs: token lookup → positional transformation → repeated
     decoder blocks → final normalization → vocabulary projection. With tied embeddings, the
@@ -234,7 +234,7 @@ lesson(3,
     print("tied storage:", tiny.lm_head.weight.data_ptr() == tiny.embed.weight.data_ptr())
     '''),
     ("md", r"""
-    ## 3.4 Parameter and compute accounting
+    ## 7.4 Parameter and compute accounting
 
     Ignoring biases, standard attention projections contain roughly \(4D^2\) parameters
     (Q, K, V, output). A conventional 4× MLP contains roughly \(8D^2\). Thus one block is
@@ -262,7 +262,7 @@ lesson(3,
         print(config, {k: f"{v/1e9:.3f}B" for k, v in parts.items()})
     '''),
     ("md", r"""
-    ## 3.5 Initialization, residual scale, and architecture diagnostics
+    ## 7.5 Initialization, residual scale, and architecture diagnostics
 
     If activations or residual updates grow with depth, softmax and nonlinearities can saturate
     and gradients can destabilize. Initialization scales projection weights; some architectures
@@ -279,9 +279,9 @@ lesson(3,
     """),
 )
 
-lesson(4,
+lesson(8,
     ("md", r"""
-    ## 4.4 Comparing positional strategies
+    ## 8.4 Comparing positional strategies
 
     Learned absolute embeddings are simple and flexible inside their trained range, but have a
     fixed table and poor extrapolation. Sinusoidal encodings require no learned table and expose
@@ -313,7 +313,7 @@ lesson(4,
     plt.tight_layout()
     '''),
     ("md", r"""
-    ## 4.5 Relative-position identity and implementation details
+    ## 8.5 Relative-position identity and implementation details
 
     Rotation matrices obey \(R(a)^T R(b)=R(b-a)\). Therefore
     \((R(m)q)^T(R(n)k)=q^T R(n-m)k\): the attention dot product exposes relative displacement
@@ -341,7 +341,7 @@ lesson(4,
     print("different displacement:", score(7, 14))
     '''),
     ("md", r"""
-    ## 4.6 Long-context evaluation reference
+    ## 8.6 Long-context evaluation reference
 
     Test several capabilities and positions: exact retrieval, multi-hop synthesis across distant
     passages, aggregation over many records, instruction persistence, conflicting evidence,
@@ -358,9 +358,9 @@ lesson(4,
     """),
 )
 
-lesson(5,
+lesson(9,
     ("md", r"""
-    ## 5.4 Attention variants in shape notation
+    ## 9.4 Attention variants in shape notation
 
     Let query heads be \(H_q\), KV heads \(H_{kv}\), and group size
     \(g=H_q/H_{kv}\). MHA has \(H_{kv}=H_q\), MQA has \(H_{kv}=1\), and GQA lies between.
@@ -391,7 +391,7 @@ lesson(5,
         print(f"{label:6} projections={params/1e6:7.1f}M  cache={cache/2**30:5.2f} GiB")
     '''),
     ("md", r"""
-    ## 5.5 Online softmax: why tiling can be exact
+    ## 9.5 Online softmax: why tiling can be exact
 
     Softmax seems to require an entire row because its denominator sums all keys. Online
     softmax processes blocks while maintaining a running maximum \(m\) and normalized sum
@@ -426,7 +426,7 @@ lesson(5,
         print(T, f"{benchmark_sdpa(T=T, repeats=3, device=device)*1000:.2f} ms")
     '''),
     ("md", r"""
-    ## 5.6 KV-cache operations reference
+    ## 9.6 KV-cache operations reference
 
     The cache stores per-layer K/V after positional transformation. Dynamic caches grow with
     tokens and are convenient; static caches preallocate a maximum shape and can work better
@@ -444,9 +444,9 @@ lesson(5,
     """),
 )
 
-lesson(7,
+lesson(13,
     ("md", r"""
-    ## 7.3 Dataset lifecycle and governance
+    ## 13.3 Dataset lifecycle and governance
 
     Treat a training dataset as a versioned software artifact. Record immutable source IDs,
     acquisition dates, licenses/terms, consent and privacy constraints, filtering code,
@@ -485,7 +485,7 @@ lesson(7,
         seen.setdefault(key, row["source"])
     '''),
     ("md", r"""
-    ## 7.4 Chat templates and assistant-only loss
+    ## 13.4 Chat templates and assistant-only loss
 
     A conversational dataset is structured records, not preformatted strings. Preserve roles
     and content, then render with the target tokenizer's chat template. Templates determine BOS,
@@ -511,7 +511,7 @@ lesson(7,
         print(f"{i:3d} | {token_id:6d} | {piece!r}")
     '''),
     ("md", r"""
-    ## 7.5 Length policy, packing, and throughput
+    ## 13.5 Length policy, packing, and throughput
 
     Plot token lengths after final rendering. Choose maximum length using percentile coverage,
     task requirements, available memory, and truncation semantics. “Keep end” may preserve the
@@ -532,9 +532,9 @@ lesson(7,
     """),
 )
 
-lesson(9,
+lesson(15,
     ("md", r"""
-    ## 9.3 Reading a pretraining run like an experiment
+    ## 15.3 Reading a pretraining run like an experiment
 
     The unit of progress is tokens, not epochs. An epoch over a duplicated toy corpus is merely a
     convenient bounded loop; large pretraining corpora may be traversed once or not even have a
@@ -565,7 +565,7 @@ lesson(9,
            "unique_source_documents": len(train_docs)})
     ''') ,
     ("md", r"""
-    ## 9.4 Scaling beyond the demonstration
+    ## 15.4 Scaling beyond the demonstration
 
     Scaling first stresses data delivery and failure recovery. Shard immutable tokenized data; shuffle
     reproducibly across workers; save model, optimizer, scheduler, scaler, RNG, and sampler position;
@@ -589,9 +589,9 @@ lesson(9,
     """),
 )
 
-lesson(10,
+lesson(16,
     ("md", r"""
-    ## 10.3 Hugging Face object boundaries
+    ## 16.3 Hugging Face object boundaries
 
     A tokenizer maps text and special-token conventions to IDs. A configuration specifies architecture
     and dimensions. A model class implements computation and owns parameters. A checkpoint supplies
@@ -618,7 +618,7 @@ lesson(10,
           "tied embeddings:", model.config.tie_word_embeddings)
     ''') ,
     ("md", r"""
-    ## 10.4 From a local artifact to a governed model release
+    ## 16.4 From a local artifact to a governed model release
 
     A useful repository should include a model card, exact base/tokenizer references, licenses, dataset
     lineage, intended and excluded uses, training hyperparameters, evaluation tables, limitations, and
@@ -646,9 +646,9 @@ lesson(10,
     """),
 )
 
-lesson(11,
+lesson(17,
     ("md", r"""
-    ## 11.6 A capability stack rather than one magic checkpoint
+    ## 17.6 A capability stack rather than one magic checkpoint
 
     Separate knowledge in weights from knowledge supplied in context, behaviors learned during tuning,
     and guarantees enforced by software. Continued pretraining may internalize stable domain patterns;
@@ -676,7 +676,7 @@ lesson(11,
     for stage, gates in release_gates.items(): print(stage, "->", ", ".join(gates))
     ''') ,
     ("md", r"""
-    ## 11.7 Choosing an optimization family
+    ## 17.7 Choosing an optimization family
 
     Use SFT when you have trusted target demonstrations. Use pairwise preference methods when producing
     a single ideal answer is hard but comparison is reliable. Use reward modeling and online RL when the
@@ -698,9 +698,9 @@ lesson(11,
     """),
 )
 
-lesson(12,
+lesson(18,
     ("md", r"""
-    ## 12.3 AdamW under the hood
+    ## 18.3 AdamW under the hood
 
     Adam tracks exponentially decayed first and second gradient moments:
     \(m_t=\beta_1m_{t-1}+(1-\beta_1)g_t\) and
@@ -731,7 +731,7 @@ lesson(12,
     plt.xlabel("optimizer step"); plt.ylabel("LR multiplier"); plt.legend(); plt.show()
     '''),
     ("md", r"""
-    ## 12.4 A production-quality training loop
+    ## 18.4 A production-quality training loop
 
     Set model mode deliberately: `train()` enables dropout; `eval()` disables it. Move batches
     to the correct device, use autocast for selected precision, divide loss for accumulation,
@@ -767,7 +767,7 @@ lesson(12,
     print(evaluate_classifier(model, validation))
     '''),
     ("md", r"""
-    ## 12.5 Reading training curves and running ablations
+    ## 18.5 Reading training curves and running ablations
 
     Compare train and validation loss on identical reduction/token policies. A sudden loss spike
     may be a rare long batch, bad record, overflow, schedule discontinuity, or distributed issue;
@@ -787,9 +787,9 @@ lesson(12,
     """),
 )
 
-lesson(13,
+lesson(19,
     ("md", r"""
-    ## 13.4 A more complete memory model
+    ## 19.4 A more complete memory model
 
     Parameter memory includes weights, gradients, optimizer moments, and sometimes FP32 master
     weights. Activation memory scales with batch, sequence length, width, layers, attention
@@ -818,7 +818,7 @@ lesson(13,
     print("These exclude activations, buffers, fragmentation, and communication.")
     '''),
     ("md", r"""
-    ## 13.5 Precision and checkpointing mechanics
+    ## 19.5 Precision and checkpointing mechanics
 
     FP16 has limited exponent range; gradient scaling multiplies loss before backward, detects
     overflow, skips invalid updates, and adjusts scale. BF16 retains FP32's exponent width with
@@ -849,7 +849,7 @@ lesson(13,
     print("output", y.shape, "input grad norm", x.grad.norm().item())
     '''),
     ("md", r"""
-    ## 13.6 Distributed strategy decision guide
+    ## 19.6 Distributed strategy decision guide
 
     Use DDP when one model replica plus optimizer fits per GPU and throughput scales with more
     data. FSDP/ZeRO shard states when replicas do not fit; sharding stages trade memory for
@@ -870,9 +870,9 @@ lesson(13,
     """),
 )
 
-lesson(14,
+lesson(20,
     ("md", r"""
-    ## 14.4 LoRA mechanics and target selection
+    ## 20.4 LoRA mechanics and target selection
 
     For a frozen projection \(y=xW^T\), LoRA adds
     \((\alpha/r)xA^TB^T\). One factor is commonly initialized randomly and the other to zero,
@@ -904,7 +904,7 @@ lesson(14,
         print(name, f"{rank*(inp+out):,} LoRA params/layer")
     '''),
     ("md", r"""
-    ## 14.5 QLoRA in detail
+    ## 20.5 QLoRA in detail
 
     QLoRA quantizes the *frozen* base weights, commonly to 4-bit NormalFloat (NF4), while LoRA
     adapters train in BF16/FP16. Double quantization compresses quantization constants. Paged
@@ -935,7 +935,7 @@ lesson(14,
         print("QLoRA configuration unavailable in this runtime:", type(exc).__name__)
     '''),
     ("md", r"""
-    ## 14.6 SFT experiment design and deployment
+    ## 20.6 SFT experiment design and deployment
 
     Establish base-model results using the exact inference template. Train on behavior the
     prompt/RAG baseline cannot achieve reliably. Use validation sources disjoint from training,
@@ -956,9 +956,9 @@ lesson(14,
     """),
 )
 
-lesson(15,
+lesson(21,
     ("md", r"""
-    ## 15.3 Preference-data construction
+    ## 21.3 Preference-data construction
 
     A preference record needs the same prompt/context with chosen and rejected responses. If
     prompts differ, the comparison is confounded. Rejections should be plausible alternatives;
@@ -986,7 +986,7 @@ lesson(15,
                   "chosen_words": len(c.split()), "rejected_words": len(r.split())})
     '''),
     ("md", r"""
-    ## 15.4 Understanding beta, margins, and reference behavior
+    ## 21.4 Understanding beta, margins, and reference behavior
 
     DPO compares the policy's chosen/rejected log-probability margin with the reference margin.
     If the policy already favors the chosen response more strongly than the reference, its DPO
@@ -1013,7 +1013,7 @@ lesson(15,
     plt.ylabel("DPO pair loss"); plt.legend(); plt.show()
     '''),
     ("md", r"""
-    ## 15.5 Preference optimization family and evaluation
+    ## 21.5 Preference optimization family and evaluation
 
     PPO/RLHF trains a reward model and optimizes policy actions with an online RL algorithm;
     it is flexible but operationally complex. DPO gives a direct offline objective. IPO changes
@@ -1031,15 +1031,15 @@ lesson(15,
     """),
 )
 
-lesson(17,
+lesson(24,
     ("md", r"""
-    ## 17.3 Repository anatomy and reproducibility
+    ## 24.3 Repository anatomy and reproducibility
 
     `config.json` describes architecture, but model-specific fields still require compatible
     Transformers code. Tokenizer artifacts may include `tokenizer.json`, vocabulary/merges or a
     SentencePiece model, special-token mappings, and `tokenizer_config.json` containing a chat
     template. Generation defaults can live in `generation_config.json`. Weights are commonly
-    sharded Safetensors files plus an index. Processor files configure image/audio preprocessing.
+    sharded Safetensors files plus an index. Processor files configure image preprocessing.
 
     A model ID points to a mutable repository branch unless `revision` is pinned to a commit.
     Pin model, tokenizer, dataset, and code revisions; store the resolved commit. Safetensors
@@ -1065,7 +1065,7 @@ lesson(17,
     for group, names in groups.items(): print(group, names[:8], "..." if len(names) > 8 else "")
     '''),
     ("md", r"""
-    ## 17.4 Loading, devices, dtypes, and memory
+    ## 24.4 Loading, devices, dtypes, and memory
 
     `from_pretrained` resolves config, downloads/caches files, constructs modules, and loads
     tensors. `dtype="auto"` follows checkpoint/config behavior; inspect actual parameter dtypes.
@@ -1093,7 +1093,7 @@ lesson(17,
     print("attention implementation:", getattr(model.config, "_attn_implementation", None))
     '''),
     ("md", r"""
-    ## 17.5 Local, Inference Providers, Endpoints, and dedicated serving
+    ## 24.5 Local, Inference Providers, Endpoints, and dedicated serving
 
     Local Transformers is transparent and ideal for learning or batch experiments, but it does
     not provide multi-user scheduling. Inference Providers route a common client call to hosted
@@ -1114,9 +1114,9 @@ lesson(17,
     """),
 )
 
-lesson(18,
+lesson(27,
     ("md", r"""
-    ## 18.4 Sampling algorithms step by step
+    ## 27.4 Sampling algorithms step by step
 
     Repetition penalties modify logits before filtering. Temperature rescales. Top-k masks all but
     k highest logits. Top-p sorts probabilities and retains the smallest prefix whose cumulative
@@ -1150,7 +1150,7 @@ lesson(18,
         print(kwargs, filtered.softmax(-1))
     '''),
     ("md", r"""
-    ## 18.5 Stopping, length, and reproducibility
+    ## 27.5 Stopping, length, and reproducibility
 
     `max_new_tokens` caps generated tokens and is generally clearer than total `max_length`.
     EOS lets the model stop naturally; custom stop strings require token-aware or incremental
@@ -1179,7 +1179,7 @@ lesson(18,
         print(i, tok.decode(result[0, prompt["input_ids"].shape[1]:], skip_special_tokens=True))
     '''),
     ("md", r"""
-    ## 18.6 Batching and streaming implementation reference
+    ## 27.6 Batching and streaming implementation reference
 
     Throughput batching groups prompts into one forward pass. Padding waste grows with length
     variance, so bucket by length. Batch size is constrained by prompt tokens, expected output,
@@ -1200,9 +1200,9 @@ lesson(18,
     """),
 )
 
-lesson(19,
+lesson(28,
     ("md", r"""
-    ## 19.3 How embedding models are trained
+    ## 28.3 How embedding models are trained
 
     Bi-encoders learn geometry from positive and negative pairs using contrastive losses. In-batch
     negatives make other examples' documents serve as negatives; quality depends on batch size and
@@ -1227,7 +1227,7 @@ lesson(19,
     # Scores are model/index-specific; do not treat one universal threshold as confidence.
     '''),
     ("md", r"""
-    ## 19.4 Lexical, dense, hybrid, and reranking systems
+    ## 28.4 Lexical, dense, hybrid, and reranking systems
 
     BM25 rewards query-term matches using term frequency, inverse document frequency, and length
     normalization. It excels at identifiers, rare names, error codes, and exact wording. Dense
@@ -1256,7 +1256,7 @@ lesson(19,
     print(fused_order, {i: round(fused_scores[i], 4) for i in fused_order})
     '''),
     ("md", r"""
-    ## 19.5 Index structures and evaluation details
+    ## 28.5 Index structures and evaluation details
 
     Brute-force exact search is the correctness baseline. HNSW builds a navigable graph and offers
     strong recall/latency with memory overhead. IVF partitions vectors into coarse cells and probes
@@ -1277,9 +1277,9 @@ lesson(19,
     """),
 )
 
-lesson(20,
+lesson(30,
     ("md", r"""
-    ## 20.4 Ingestion and chunking as an information-retrieval problem
+    ## 30.4 Ingestion and chunking as an information-retrieval problem
 
     Parse by source type while preserving headings, pages, tables, code blocks, timestamps, ACLs,
     canonical URL, and offsets. Remove navigation/footer duplication without erasing meaningful
@@ -1305,7 +1305,7 @@ lesson(20,
                "duplicate_overlap_cost": sum(lengths) - sum(len(t.split()) for t in sources.values())})
     '''),
     ("md", r"""
-    ## 20.5 Query transformations and context assembly
+    ## 30.5 Query transformations and context assembly
 
     Conversational questions may depend on prior turns; create a standalone retrieval query without
     changing intent. Multi-query retrieval generates paraphrases to improve recall but increases
@@ -1337,7 +1337,7 @@ lesson(20,
     print(build_context(selected))
     '''),
     ("md", r"""
-    ## 20.6 Grounded generation, citations, and abstention
+    ## 30.6 Grounded generation, citations, and abstention
 
     Ask for claim-level citations, not a decorative source list. Citation correctness has two
     dimensions: entailment (does the cited passage support the claim?) and completeness (are all
@@ -1362,7 +1362,7 @@ lesson(20,
           "unused evidence:", allowed_ids - cited)
     '''),
     ("md", r"""
-    ## 20.7 RAG evaluation and production reference
+    ## 30.7 RAG evaluation and production reference
 
     Build query records with answerability, reference answer/claims, supporting chunk/source IDs,
     forbidden/distractor sources, and slices. Evaluate ingestion (parse completeness), retrieval
@@ -1382,9 +1382,9 @@ lesson(20,
     """),
 )
 
-lesson(22,
+lesson(32,
     ("md", r"""
-    ## 22.3 Tool-schema design in depth
+    ## 32.3 Tool-schema design in depth
 
     Tool descriptions should state purpose, when to use/not use it, parameter semantics, units,
     defaults, allowed ranges, and result/error shape. Prefer small orthogonal tools over one giant
@@ -1411,7 +1411,7 @@ lesson(22,
         except ValidationError as exc: print("invalid", candidate, exc.errors()[0]["type"])
     '''),
     ("md", r"""
-    ## 22.4 Agent loop states and control flow
+    ## 32.4 Agent loop states and control flow
 
     A robust loop is a state machine: receive request → call model → validate proposed calls →
     authorize → execute with timeout → normalize observation → append exact tool-call/result IDs →
@@ -1446,7 +1446,7 @@ lesson(22,
     for step in range(3): print(step, budget.admit(step, "calculator", {"expression": "2+2"}))
     '''),
     ("md", r"""
-    ## 22.5 Planning patterns and when not to use an agent
+    ## 32.5 Planning patterns and when not to use an agent
 
     A direct tool call is best for known workflows. A deterministic DAG/state machine is best when
     steps and transitions are known but tool results vary. An agent loop is justified when the next
@@ -1465,9 +1465,9 @@ lesson(22,
     """),
 )
 
-lesson(24,
+lesson(34,
     ("md", r"""
-    ## 24.3 Protocol lifecycle and capability negotiation
+    ## 34.3 Protocol lifecycle and capability negotiation
 
     An MCP client connects over a transport, initializes a session, exchanges protocol versions and
     capabilities, then discovers primitives. Tools are model-invocable operations. Resources are
@@ -1494,7 +1494,7 @@ lesson(24,
     await describe_server()
     '''),
     ("md", r"""
-    ## 24.4 Server engineering and error design
+    ## 34.4 Server engineering and error design
 
     Tools should be thin adapters over tested domain functions, with typed parameters, bounded
     inputs/outputs, explicit side-effect annotations in descriptions, and sanitized errors. Avoid
@@ -1521,7 +1521,7 @@ lesson(24,
         print("bounded input test:", type(exc).__name__, str(exc))
     '''),
     ("md", r"""
-    ## 24.5 Host bridge and security policy
+    ## 34.5 Host bridge and security policy
 
     The host decides what the model sees and what is executed. Convert discovered schemas to the
     model's tool format, but maintain a server/tool allowlist, validate arguments locally, bind calls
@@ -1542,9 +1542,9 @@ lesson(24,
     """),
 )
 
-lesson(28,
+lesson(38,
     ("md", r"""
-    ## 28.4 From product contract to evaluation record
+    ## 38.4 From product contract to evaluation record
 
     Write requirements as observable claims. “Helpful” is underspecified; “returns the correct
     account policy, cites the effective policy version, and abstains when no policy applies” yields
@@ -1577,7 +1577,7 @@ lesson(28,
     print(record.model_dump_json(indent=2))
     '''),
     ("md", r"""
-    ## 28.5 Grader design and aggregation
+    ## 38.5 Grader design and aggregation
 
     Deterministic graders are preferred when the contract is deterministic: JSON/schema, regex,
     set equality, numeric tolerance, executable unit tests, tool name/arguments, citation IDs, and
@@ -1609,7 +1609,7 @@ lesson(28,
         print(group, f"{sum(values)/len(values):.1%}", f"95% CI [{lo:.1%}, {hi:.1%}]")
     '''),
     ("md", r"""
-    ## 28.6 Comparative statistics and experiment discipline
+    ## 38.6 Comparative statistics and experiment discipline
 
     Evaluate systems on the same examples and use paired differences. Bootstrap examples (or
     independent clusters such as users/documents) to estimate uncertainty. For binary paired
@@ -1638,7 +1638,7 @@ lesson(28,
     print(f"paired delta={observed:+.3f}; bootstrap 95% CI [{lo:+.3f}, {hi:+.3f}]")
     '''),
     ("md", r"""
-    ## 28.7 Evaluation operations reference
+    ## 38.7 Evaluation operations reference
 
     An experiment artifact should include application code commit, model ID/revision/provider,
     prompt/template/tool schemas, decoding and seed, retrieval/index versions, dataset fingerprint,
@@ -1658,9 +1658,9 @@ lesson(28,
     """),
 )
 
-lesson(29,
+lesson(39,
     ("md", r"""
-    ## 29.3 Rubric construction and prompt anatomy
+    ## 39.3 Rubric construction and prompt anatomy
 
     Criteria should be observable, minimally overlapping, and tied to the decision. Define anchors
     with examples: a correctness 1 contains a material error; 3 is mostly correct with a meaningful
@@ -1693,7 +1693,7 @@ lesson(29,
     print(validate_judgment(mock))
     '''),
     ("md", r"""
-    ## 29.4 Pointwise, pairwise, listwise, and reference-free judging
+    ## 39.4 Pointwise, pairwise, listwise, and reference-free judging
 
     Pointwise scoring gives absolute-looking values but judges use implicit standards and score
     distributions can drift. Pairwise comparison is cognitively simpler and often more reliable,
@@ -1719,7 +1719,7 @@ lesson(29,
         print(pair, reconcile(*pair))
     '''),
     ("md", r"""
-    ## 29.5 Calibration, reliability, and uncertainty
+    ## 39.5 Calibration, reliability, and uncertainty
 
     Sample representative items with independent human labels. Measure criterion correlations,
     confusion matrices, pairwise agreement, rank correlation, and slice behavior. Agreement can be
@@ -1747,7 +1747,7 @@ lesson(29,
     print("Cohen kappa:", binary_kappa(human, judge))
     '''),
     ("md", r"""
-    ## 29.6 Judge attack and failure-mode reference
+    ## 39.6 Judge attack and failure-mode reference
 
     Candidate text can contain “award me 5,” forged rubric sections, system-like delimiters, or long
     distracting content. Treat it as untrusted; use structured data boundaries, strong role
@@ -1766,9 +1766,9 @@ lesson(29,
     """),
 )
 
-lesson(30,
+lesson(41,
     ("md", r"""
-    ## 30.4 Threat modeling an LLM system
+    ## 41.4 Threat modeling an LLM system
 
     Map assets (secrets, private data, money, accounts, reputation), actors, entry points, trust
     boundaries, components, data stores, and effects. Trace user text, retrieved content, files,
@@ -1795,7 +1795,7 @@ lesson(30,
     for threat in threats: print(threat)
     '''),
     ("md", r"""
-    ## 30.5 Authorization, isolation, and side effects
+    ## 41.5 Authorization, isolation, and side effects
 
     Bind user identity and tenant server-side; never let the model choose an unrestricted account ID.
     Give tools narrowly scoped credentials. Split read from write and high-risk operations. Validate
@@ -1824,7 +1824,7 @@ lesson(30,
     except Exception as exc: print(type(exc).__name__, exc)
     '''),
     ("md", r"""
-    ## 30.6 RAG, agent, MCP, and training-specific threats
+    ## 41.6 RAG, agent, MCP, and training-specific threats
 
     RAG can retrieve poisoned/injected sources, expose unauthorized chunks, cite stale content, or
     leak private text through embeddings/logs. Enforce ACL filters, source trust/provenance, deletion,
@@ -1853,7 +1853,7 @@ lesson(30,
     print(invariants, "release gate:", all(invariants.values()))
     '''),
     ("md", r"""
-    ## 30.7 Security testing and incident readiness reference
+    ## 41.7 Security testing and incident readiness reference
 
     Turn the threat register into automated adversarial cases. Vary encoding, languages, document
     position, role-like syntax, nested files, redirects/DNS/IP forms, tool outputs, multi-turn setup,
@@ -1873,9 +1873,9 @@ lesson(30,
     """),
 )
 
-lesson(32,
+lesson(43,
     ("md", r"""
-    ## 32.4 Vision-language architecture families
+    ## 43.4 Vision-language architecture families
 
     Many VLMs encode images into patch features, project them into the language model's hidden
     space, and place visual tokens alongside text tokens. Others use cross-attention or resampling
@@ -1898,7 +1898,7 @@ lesson(32,
         print(f"{width}x{height}: ~{patch_count(width,height):,} raw {14}x{14} patches")
     '''),
     ("md", r"""
-    ## 32.5 OCR, layout, charts, and grounded extraction
+    ## 43.5 OCR, layout, charts, and grounded extraction
 
     OCR recognizes glyphs; document understanding also needs reading order, key-value association,
     tables, page references, and visual hierarchy. Native PDF extraction is often cheaper and exact
@@ -1931,7 +1931,7 @@ lesson(32,
                             tax=23.45, total=123.45, evidence_page=1))
     '''),
     ("md", r"""
-    ## 32.6 Multimodal prompting, batching, and serving
+    ## 43.6 Multimodal prompting, batching, and serving
 
     Follow the model's exact chat template and content-part structure. State which image each
     instruction refers to; order images deterministically; avoid ambiguous “above/below.” Separate
@@ -1955,7 +1955,7 @@ lesson(32,
     print(provenance)
     '''),
     ("md", r"""
-    ## 32.7 Multimodal evaluation and safety reference
+    ## 43.7 Multimodal evaluation and safety reference
 
     Build representative source files, not screenshots chosen for demos. Field extraction uses exact/
     normalized accuracy and per-field precision/recall; OCR uses character/word error rate; tables use
@@ -1972,9 +1972,9 @@ lesson(32,
     """),
 )
 
-lesson(33,
+lesson(44,
     ("md", r"""
-    ## 33.4 Latency and throughput decomposition
+    ## 44.4 Latency and throughput decomposition
 
     End-to-end latency includes client/network, admission queue, tokenization/rendering, retrieval/
     tools, prefill, decode, validation, and streaming transport. TTFT includes everything until the
@@ -2001,7 +2001,7 @@ lesson(33,
     print("mean stage ms:", {k: np.mean([r[k] for r in trace_rows]) for k in trace_rows[0]})
     '''),
     ("md", r"""
-    ## 33.5 Resilience patterns and their boundaries
+    ## 44.5 Resilience patterns and their boundaries
 
     Set a total deadline, then allocate stage timeouts; otherwise retries can exceed the user's
     budget. Retry transient rate-limit/network/5xx failures only when safe. Respect retry-after, use
@@ -2032,7 +2032,7 @@ lesson(33,
     print("generation timeout", deadline.timeout(1.5))
     '''),
     ("md", r"""
-    ## 33.6 Observability, SLOs, and privacy
+    ## 44.6 Observability, SLOs, and privacy
 
     Metrics aggregate health; logs capture discrete events; traces connect stages; profiles explain
     resource time. Use low-cardinality metric labels—never user IDs or prompts. Trace IDs correlate
@@ -2056,7 +2056,7 @@ lesson(33,
     print(f"consumed: {consumed/budget_minutes:.1%}; remaining: {budget_minutes-consumed:.1f} min")
     '''),
     ("md", r"""
-    ## 33.7 Load testing and release engineering reference
+    ## 44.7 Load testing and release engineering reference
 
     Model prompt/output distributions, arrival process, streaming, cancellations, retrieval/tools,
     cache hit rates, tenants, and failures. Open-loop tests send arrivals independently and expose
@@ -2075,9 +2075,9 @@ lesson(33,
     """),
 )
 
-lesson(36,
+lesson(47,
     ("md", r"""
-    ## 36.7 Ollama deployment decision record
+    ## 47.7 Ollama deployment decision record
 
     Before adopting an engine, write down the workload and constraint that selected it. Ollama is a
     strong default for a developer workstation, an offline demonstration, or a single-user application
@@ -2105,9 +2105,9 @@ lesson(36,
     ''') ,
 )
 
-lesson(37,
+lesson(48,
     ("md", r"""
-    ## 37.5 vLLM engine mental model
+    ## 48.5 vLLM engine mental model
 
     Requests pass through an API frontend/tokenizer into an engine scheduler. Prefill computes prompt
     states; decode advances active sequences token by token. A block manager allocates logical KV-cache
@@ -2134,7 +2134,7 @@ lesson(37,
     print("cached_tokens is total across concurrent sequences, not max context alone.")
     '''),
     ("md", r"""
-    ## 37.6 Server configuration and compatibility
+    ## 48.6 Server configuration and compatibility
 
     Important controls include served model name/revision, tokenizer/chat template, dtype,
     quantization, maximum model length, GPU memory utilization, maximum batched tokens/sequences,
@@ -2162,7 +2162,7 @@ lesson(37,
     print(" ".join(command))
     '''),
     ("md", r"""
-    ## 37.7 Parallelism, replicas, and topology
+    ## 48.7 Parallelism, replicas, and topology
 
     Tensor parallelism shards layer matrices and introduces frequent collectives; keep it within a
     fast-connected node when possible. Pipeline parallelism splits layers/stages but can introduce
@@ -2189,7 +2189,7 @@ lesson(37,
               "headroom_ok" if utilization < .7 else "queue risk")
     '''),
     ("md", r"""
-    ## 37.8 Benchmark methodology and optimization
+    ## 48.8 Benchmark methodology and optimization
 
     Separate offline throughput from online latency benchmarks. Use representative prompt/output
     length distributions and arrival patterns. Warm up. Report TTFT, inter-token latency, end-to-end
@@ -2204,7 +2204,7 @@ lesson(37,
     selection can have shape-dependent tradeoffs. Record power/cost if economics matter.
     """),
     ("md", r"""
-    ## 37.9 Production and security reference
+    ## 48.9 Production and security reference
 
     Put the server behind authenticated TLS ingress with per-tenant rate/token/request-size limits.
     Bind admin/dev endpoints privately. Do not use a shared example API key. Control model/tokenizer
@@ -2227,8 +2227,8 @@ lesson(37,
 # Compact, lesson-specific reference appendices. These are intentionally placed before each
 # notebook's exercises so the notebook works both as a guided lesson and a later lookup resource.
 REFERENCE_APPENDICES = {
-1: r"""
-## 1.7 Tokenization reference and common pitfalls
+4: r"""
+## 4.7 Tokenization reference and common pitfalls
 
 | Term | Practical meaning |
 |---|---|
@@ -2251,8 +2251,8 @@ token-inefficient. Log exact token IDs when a format behaves unexpectedly.
 sizes, and serving capacity. The tokenizer is not preprocessing plumbing—it is the discrete interface
 on which every later notebook depends.
 """,
-2: r"""
-## 2.7 Mathematical reference
+5: r"""
+## 5.7 Mathematical reference
 
 | Quantity | Definition | Interpretation |
 |---|---|---|
@@ -2272,8 +2272,8 @@ For gradient checks, compare autograd with finite differences on a tiny float64 
 diagnostics, distinguish loss scale, gradient norm, and actual parameter update after optimizer
 adaptation. Report evaluation reduction and denominator explicitly.
 """,
-3: r"""
-## 3.6 Decoder architecture reference
+7: r"""
+## 7.6 Decoder architecture reference
 
 | Component | Input/output | Primary role |
 |---|---|---|
@@ -2294,8 +2294,8 @@ dimension, layer count, MLP width/activation, norm type/epsilon, RoPE configurat
 tie policy, and attention pattern must match weights. Shape-compatible changes can still silently
 destroy behavior.
 """,
-4: r"""
-## 4.7 Positional-method reference
+8: r"""
+## 8.7 Positional-method reference
 
 | Method | Injected where | Learned? | Extrapolation considerations |
 |---|---|---:|---|
@@ -2314,8 +2314,8 @@ Useful diagnostics include joint-shift invariance, norm preservation, cached-ver
 retrieval by depth, multi-hop evidence separation, long-output stability, and perplexity versus token
 position. Always compare against a shorter-context/RAG baseline with equal answer evidence.
 """,
-5: r"""
-## 5.7 Efficient-attention decision table
+9: r"""
+## 9.7 Efficient-attention decision table
 
 | Technique | Changes mathematical attention? | Main benefit | Main tradeoff |
 |---|---:|---|---|
@@ -2335,8 +2335,8 @@ When serving, capacity is total active cached tokens across sequences. Apply adm
 the allocator reaches failure; leave workspace/deployment headroom; monitor rather than infer cache
 health from GPU utilization alone.
 """,
-7: r"""
-## 7.6 Training-data reference
+13: r"""
+## 13.6 Training-data reference
 
 | Stage | Required evidence |
 |---|---|
@@ -2357,8 +2357,8 @@ rendered tokens and masks are regression-tested whenever tokenizer/template/coll
 Privacy and deletion requirements propagate into derived chunks, tokenized caches, checkpoints, and
 logs. Dataset documentation should state known gaps and filtering harms, not only row counts.
 """,
-12: r"""
-## 12.6 Optimization reference
+18: r"""
+## 18.6 Optimization reference
 
 | Symptom | First checks |
 |---|---|
@@ -2378,8 +2378,8 @@ Clip global norm after unscaling. Log pre-clip norm and proportion clipped. Excl
 weight decay according to an explicit parameter-group rule. Validate optimizer/scheduler step counts
 against accumulation; an off-by-K schedule silently changes training.
 """,
-13: r"""
-## 13.7 Memory-efficiency reference
+19: r"""
+## 19.7 Memory-efficiency reference
 
 | Method | Saves | Costs/constraints |
 |---|---|---|
@@ -2401,8 +2401,8 @@ Distributed scaling correctness checks include identical data weighting, synchro
 duplicate/omitted samples, correct metric reductions, checkpoint reload at different world size where
 supported, and convergence parity on a small controlled run.
 """,
-14: r"""
-## 14.7 SFT/adapter reference
+20: r"""
+## 20.7 SFT/adapter reference
 
 | Choice | Typical implication |
 |---|---|
@@ -2422,8 +2422,8 @@ Before publishing: base-versus-adapter paired evals, safety/capability retention
 fresh environment, license/data documentation, merge/quantization quality checks, inference latency,
 and rollback. Treat adapter inputs and outputs as model releases, not miscellaneous experiment files.
 """,
-15: r"""
-## 15.6 Preference-optimization reference
+21: r"""
+## 21.6 Preference-optimization reference
 
 | Method | Data/signal | Distinguishing feature |
 |---|---|---|
@@ -2442,8 +2442,8 @@ Monitor chosen/rejected log probabilities and rewards, margin/accuracy, KL/drift
 validation loss, task metrics, safety/refusal behavior, and diversity. Audit order and style shortcuts.
 Preference data encodes values and rater context; document who rated what under which guidelines.
 """,
-17: r"""
-## 17.6 Hugging Face artifact/client reference
+24: r"""
+## 24.6 Hugging Face artifact/client reference
 
 | Object | Purpose |
 |---|---|
@@ -2470,8 +2470,8 @@ for _number, _appendix in REFERENCE_APPENDICES.items():
     EXPANSIONS[_number].append(("md", _appendix))
 
 REFERENCE_APPENDICES.update({
-18: r"""
-## 18.7 Generation reference
+27: r"""
+## 27.7 Generation reference
 
 | Parameter | Effect | Common misuse |
 |---|---|---|
@@ -2492,8 +2492,8 @@ Structured output guarantees at most syntactic/schema compliance supported by th
 business semantics and unknown fields, define retry/repair policy, and treat parser failure as an
 observed outcome. Streaming must accumulate before final structured parsing.
 """,
-19: r"""
-## 19.6 Semantic-search reference
+28: r"""
+## 28.6 Semantic-search reference
 
 | Stage | Primary metric/question |
 |---|---|
@@ -2513,8 +2513,8 @@ Version embedding model/revision, preprocessing/prefix, dimension, normalization
 index parameters, corpus snapshot, and IDs. Never mix vector generations. Evaluate queries with
 multiple relevant documents and incomplete judgments carefully; inspect failures qualitatively.
 """,
-20: r"""
-## 20.8 RAG reference architecture
+30: r"""
+## 30.8 RAG reference architecture
 
 `sources → parse → normalize → chunk → metadata/ACL → embed → index/version`
 
@@ -2533,8 +2533,8 @@ model follows injected document instructions; citations reference unsupported or
 Production ownership includes source freshness/deletion, index migrations, ACL audits, evaluation,
 security response, and observable stage latency—not only the generation prompt.
 """,
-22: r"""
-## 22.6 Agent/tool reference
+32: r"""
+## 32.6 Agent/tool reference
 
 | Layer | Responsibility |
 |---|---|
@@ -2555,8 +2555,8 @@ side effects, citation/use of observations, final correctness, latency, and cost
 workflows without an agent when the state graph is known—the simplest sufficient controller is usually
 more reliable and auditable.
 """,
-24: r"""
-## 24.6 MCP reference
+34: r"""
+## 34.6 MCP reference
 
 | Primitive | Meaning |
 |---|---|
@@ -2577,8 +2577,8 @@ Test domain functions, server protocol discovery/invocation, host schema convers
 and security policy separately. Pin protocol/SDK/server versions and test compatibility. Avoid broad
 filesystem/shell/browser tools unless strongly isolated and explicitly authorized.
 """,
-28: r"""
-## 28.8 Evaluation reference
+38: r"""
+## 38.8 Evaluation reference
 
 | Evaluation layer | Examples |
 |---|---|
@@ -2599,8 +2599,8 @@ coverage while refreshing broad representative samples. A metric becomes unrelia
 without checking its relationship to user value—keep qualitative review and multiple independent
 signals.
 """,
-29: r"""
-## 29.7 LLM-judge reference
+39: r"""
+## 39.7 LLM-judge reference
 
 | Risk | Control/evidence |
 |---|---|
@@ -2620,8 +2620,8 @@ A judge can support ranking, triage, and scalable qualitative measurement. It sh
 authority for high-stakes facts, safety, security, or consequential actions. Route disagreements,
 critical errors, novel slices, and random samples to humans.
 """,
-30: r"""
-## 30.8 Security-control reference
+41: r"""
+## 41.8 Security-control reference
 
 | Security property | Enforced by |
 |---|---|
@@ -2642,8 +2642,8 @@ Measure security using actual traces/effects and invariants. Maintain revocation
 incident plan. Re-threat-model whenever tools, data sources, tenancy, model, deployment, or persistent
 memory changes.
 """,
-32: r"""
-## 32.8 Multimodal reference
+43: r"""
+## 43.8 Multimodal reference
 
 | Task | Prefer/evaluate |
 |---|---|
@@ -2663,8 +2663,8 @@ decompression, enforce tenant ACL, and treat visible/hidden instructions as inje
 private, copyrighted, and location-sensitive content according to policy. Validate high-value numeric
 fields outside the model.
 """,
-33: r"""
-## 33.8 Production-readiness reference
+44: r"""
+## 44.8 Production-readiness reference
 
 | Area | Minimum evidence |
 |---|---|
@@ -2684,8 +2684,8 @@ Load tests must avoid coordinated omission, include prompt/output distributions 
 run long enough for queues/autoscaling. Capacity conclusions are invalid without hardware/software and
 quality/length controls.
 """,
-36: r"""
-## 36.8 Ollama operations reference
+47: r"""
+## 47.8 Ollama operations reference
 
 | Concern | Minimum practice |
 |---|---|
@@ -2706,8 +2706,8 @@ Treat generated JSON, tool calls, paths, and URLs as untrusted. Bound request an
 timeouts, queues, concurrency, and tool effects. Redact sensitive telemetry and test behavior after any
 model, template, quantization, server, or hardware change.
 """,
-37: r"""
-## 37.10 vLLM operations reference
+48: r"""
+## 48.10 vLLM operations reference
 
 | Question | Evidence to collect |
 |---|---|
@@ -2728,5 +2728,5 @@ queue time, prefix hit rate, aborts/errors, and GPU health—not GPU utilization
 """,
 })
 
-for _number in [14, 15, 17, 18, 19, 20, 22, 24, 28, 29, 30, 32, 33, 36, 37]:
+for _number in [27, 28, 30, 32, 34, 38, 39, 41, 43, 44, 47, 48]:
     EXPANSIONS[_number].append(("md", REFERENCE_APPENDICES[_number]))
