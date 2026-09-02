@@ -1,6 +1,6 @@
 # Rigorous LLM Engineering — Hugging Face First
 
-[![Course validation](https://img.shields.io/badge/notebooks-33%20validated-2ea44f)](#validation)
+[![Course validation](https://img.shields.io/badge/notebooks-37%20validated-2ea44f)](#validation)
 [![Hugging Face](https://img.shields.io/badge/ecosystem-Hugging%20Face-FFD21E)](https://huggingface.co/)
 [![Google Colab](https://img.shields.io/badge/runtime-Google%20Colab-F9AB00)](COLAB.md)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776AB)](pyproject.toml)
@@ -31,7 +31,7 @@ standalone references.
 | 2. Training | Data pipelines · Synthetic data · Native and HF pretraining · Post-training pathways · Optimization and distributed training · SFT/LoRA · DPO · GRPO and verifiable rewards |
 | 3. Hugging Face inference | Hub, model cards, and inference · Generation, batching, streaming, and structured output |
 | 4. Retrieval | Embeddings and semantic search · End-to-end RAG · Hybrid retrieval, reranking, compression, and grounded evaluation |
-| 5. Agents and MCP | Tool calling and agent loops · Building an MCP server |
+| 5. Agents and MCP | Bounded tool loops · Hugging Face smolagents · Full MCP · Durable state and memory · Multi-agent workflows · Agent evaluation and sandboxing |
 | 6. Evaluation and security | Evaluation fundamentals · LLM as a judge · Application security · Experiment tracking and model governance |
 | 7. Multimodal | Vision-language models and document understanding |
 | 8. Production | Reliability and load testing · Quantization and deployment formats · Engine comparison · Ollama · vLLM |
@@ -64,17 +64,21 @@ Every notebook can be opened directly in Google Colab after the repository is pu
 | 20 | End-to-end RAG and retrieval evaluation | [Notebook](04_retrieval/20_end_to_end_rag.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/04_retrieval/20_end_to_end_rag.ipynb) |
 | 21 | Advanced RAG | [Notebook](04_retrieval/21_advanced_rag.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/04_retrieval/21_advanced_rag.ipynb) |
 | 22 | Tool calling and bounded agent loops | [Notebook](05_agents_mcp/22_tool_calling_agents.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/05_agents_mcp/22_tool_calling_agents.ipynb) |
-| 23 | Building an MCP server | [Notebook](05_agents_mcp/23_mcp_server_hf_client.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/05_agents_mcp/23_mcp_server_hf_client.ipynb) |
-| 24 | Evaluation fundamentals and regression testing | [Notebook](06_evaluation_security/24_evaluation_fundamentals.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/06_evaluation_security/24_evaluation_fundamentals.ipynb) |
-| 25 | LLM as a judge | [Notebook](06_evaluation_security/25_llm_as_a_judge.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/06_evaluation_security/25_llm_as_a_judge.ipynb) |
-| 26 | LLM application security | [Notebook](06_evaluation_security/26_llm_application_security.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/06_evaluation_security/26_llm_application_security.ipynb) |
-| 27 | Experiment tracking, governance, and release engineering | [Notebook](06_evaluation_security/27_experiment_tracking_model_governance.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/06_evaluation_security/27_experiment_tracking_model_governance.ipynb) |
-| 28 | Vision-language models and document understanding | [Notebook](07_multimodal/28_vision_language_models.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/07_multimodal/28_vision_language_models.ipynb) |
-| 29 | Reliability, observability, and load testing | [Notebook](08_production/29_reliability_observability.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/08_production/29_reliability_observability.ipynb) |
-| 30 | Quantization and deployment model formats | [Notebook](08_production/30_quantization_model_formats.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/08_production/30_quantization_model_formats.ipynb) |
-| 31 | Choosing an open-model serving engine | [Notebook](08_production/31_serving_engine_comparison.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/08_production/31_serving_engine_comparison.ipynb) |
-| 32 | Local model serving with Ollama | [Notebook](08_production/32_ollama_local_serving.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/08_production/32_ollama_local_serving.ipynb) |
-| 33 | Serving open models with vLLM | [Notebook](08_production/33_vllm_serving.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/08_production/33_vllm_serving.ipynb) |
+| 23 | Agents with Hugging Face smolagents | [Notebook](05_agents_mcp/23_huggingface_smolagents.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/05_agents_mcp/23_huggingface_smolagents.ipynb) |
+| 24 | Building a full MCP server and host bridge | [Notebook](05_agents_mcp/24_mcp_server_hf_client.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/05_agents_mcp/24_mcp_server_hf_client.ipynb) |
+| 25 | Durable agent workflows, memory, and human approval | [Notebook](05_agents_mcp/25_durable_agent_workflows_memory.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/05_agents_mcp/25_durable_agent_workflows_memory.ipynb) |
+| 26 | Multi-agent workflows and coordination | [Notebook](05_agents_mcp/26_multi_agent_workflows.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/05_agents_mcp/26_multi_agent_workflows.ipynb) |
+| 27 | Agent evaluation, sandboxing, and trajectory observability | [Notebook](05_agents_mcp/27_agent_evaluation_sandboxing.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/05_agents_mcp/27_agent_evaluation_sandboxing.ipynb) |
+| 28 | Evaluation fundamentals and regression testing | [Notebook](06_evaluation_security/28_evaluation_fundamentals.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/06_evaluation_security/28_evaluation_fundamentals.ipynb) |
+| 29 | LLM as a judge | [Notebook](06_evaluation_security/29_llm_as_a_judge.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/06_evaluation_security/29_llm_as_a_judge.ipynb) |
+| 30 | LLM application security | [Notebook](06_evaluation_security/30_llm_application_security.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/06_evaluation_security/30_llm_application_security.ipynb) |
+| 31 | Experiment tracking, governance, and release engineering | [Notebook](06_evaluation_security/31_experiment_tracking_model_governance.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/06_evaluation_security/31_experiment_tracking_model_governance.ipynb) |
+| 32 | Vision-language models and document understanding | [Notebook](07_multimodal/32_vision_language_models.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/07_multimodal/32_vision_language_models.ipynb) |
+| 33 | Reliability, observability, and load testing | [Notebook](08_production/33_reliability_observability.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/08_production/33_reliability_observability.ipynb) |
+| 34 | Quantization and deployment model formats | [Notebook](08_production/34_quantization_model_formats.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/08_production/34_quantization_model_formats.ipynb) |
+| 35 | Choosing an open-model serving engine | [Notebook](08_production/35_serving_engine_comparison.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/08_production/35_serving_engine_comparison.ipynb) |
+| 36 | Local model serving with Ollama | [Notebook](08_production/36_ollama_local_serving.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/08_production/36_ollama_local_serving.ipynb) |
+| 37 | Serving open models with vLLM | [Notebook](08_production/37_vllm_serving.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/08_production/37_vllm_serving.ipynb) |
 
 ## Quick start
 
@@ -135,7 +139,7 @@ lesson depth so later edits do not accidentally collapse notebooks back into sho
 02_training/               Data, synthetic data, pretraining, SFT, preferences, and reasoning RL
 03_huggingface/            Hub and inference workflows
 04_retrieval/              Embeddings, baseline RAG, hybrid retrieval, and reranking
-05_agents_mcp/             Tool agents and MCP
+05_agents_mcp/             Tool agents, smolagents, MCP, durable and multi-agent workflows
 06_evaluation_security/    Evaluation, judging, security, governance, and release gates
 07_multimodal/             Vision-language systems
 08_production/             Reliability, quantization, engine selection, Ollama, and vLLM

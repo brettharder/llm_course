@@ -27,13 +27,14 @@ COLAB_PACKAGES = {
     20: ["sentence-transformers>=4,<6"],
     21: ["sentence-transformers>=4,<6"],
     22: ["huggingface-hub>=0.30,<1", "python-dotenv>=1.1"],
-    23: ["mcp>=1.6"],
-    25: ["huggingface-hub>=0.30,<1", "python-dotenv>=1.1"],
-    28: ["huggingface-hub>=0.30,<1", "python-dotenv>=1.1", "pillow>=10"],
-    30: ["transformers>=4.51,<5", "accelerate>=1.6", "safetensors>=0.5"],
-    31: ["httpx>=0.28"],
-    32: ["httpx>=0.28", "pydantic>=2.11"],
-    33: ["httpx>=0.28"],
+    23: ["smolagents>=1.17", "huggingface-hub>=0.30,<1", "python-dotenv>=1.1"],
+    24: ["mcp>=1.6"],
+    29: ["huggingface-hub>=0.30,<1", "python-dotenv>=1.1"],
+    32: ["huggingface-hub>=0.30,<1", "python-dotenv>=1.1", "pillow>=10"],
+    34: ["transformers>=4.51,<5", "accelerate>=1.6", "safetensors>=0.5"],
+    35: ["httpx>=0.28"],
+    36: ["httpx>=0.28", "pydantic>=2.11"],
+    37: ["httpx>=0.28"],
 }
 
 
@@ -1915,7 +1916,7 @@ add("04_retrieval/21_advanced_rag.ipynb", "Advanced RAG: Hybrid Retrieval, Reran
     "Evaluate retrieval, answers, citations, latency, and adversarial robustness component by component",
 ], [
     md(r"""
-    ## 25.1 Why advanced RAG is a retrieval system, not a longer prompt
+    ## 29.1 Why advanced RAG is a retrieval system, not a longer prompt
 
     Dense retrieval captures semantic similarity but can miss identifiers, rare names, error codes, and exact
     phrases. Lexical retrieval excels at exact overlap but misses paraphrase. Advanced RAG combines independent
@@ -1939,7 +1940,7 @@ add("04_retrieval/21_advanced_rag.ipynb", "Advanced RAG: Hybrid Retrieval, Reran
     print(query, documents)
     ''') ,
     md(r"""
-    ## 25.2 Hybrid candidate generation and reciprocal-rank fusion
+    ## 29.2 Hybrid candidate generation and reciprocal-rank fusion
 
     BM25 scores term matches with document-frequency and length normalization. Dense bi-encoders embed queries
     and chunks independently for efficient vector search. Retrieve a wider candidate set from each, then fuse
@@ -1977,7 +1978,7 @@ add("04_retrieval/21_advanced_rag.ipynb", "Advanced RAG: Hybrid Retrieval, Reran
     print("lexical:", lexical_order, "dense:", dense_order, "fused:", fused)
     ''') ,
     md(r"""
-    ## 25.3 Reranking and diversity
+    ## 29.3 Reranking and diversity
 
     A cross-encoder jointly reads query and candidate, usually improving precision at higher latency than a
     bi-encoder. Rerank only a bounded candidate pool and batch by token length. Generative rerankers can provide
@@ -2002,7 +2003,7 @@ add("04_retrieval/21_advanced_rag.ipynb", "Advanced RAG: Hybrid Retrieval, Reran
     print("diverse selection:", maximal_marginal_relevance(relevance, similarity))
     ''') ,
     md(r"""
-    ## 25.4 Query transformation and routing
+    ## 29.4 Query transformation and routing
 
     Conversation questions may require history-aware rewriting, but a rewrite can erase constraints or introduce
     facts. Preserve the original query and evaluate rewritten retrieval independently. Multi-query retrieval
@@ -2021,7 +2022,7 @@ add("04_retrieval/21_advanced_rag.ipynb", "Advanced RAG: Hybrid Retrieval, Reran
     print(deterministic_queries(query))
     ''') ,
     md(r"""
-    ## 25.5 Contextual compression and grounded answers
+    ## 29.5 Contextual compression and grounded answers
 
     Contextual compression extracts query-relevant spans from retrieved chunks, reducing distraction and token
     cost. Extraction can remove qualifications, so preserve source offsets and expand enough neighborhood for
@@ -2045,7 +2046,7 @@ add("04_retrieval/21_advanced_rag.ipynb", "Advanced RAG: Hybrid Retrieval, Reran
     print(context)
     ''') ,
     md(r"""
-    ## 25.6 Evaluation matrix
+    ## 29.6 Evaluation matrix
 
     Retrieval metrics require relevance judgments: Recall@k asks whether necessary evidence was retrieved; MRR
     rewards early first relevance; nDCG supports graded relevance; precision measures distractors. Multi-hop tasks
@@ -2143,19 +2144,186 @@ add("05_agents_mcp/22_tool_calling_agents.ipynb", "Tool Calling and Bounded Agen
     confirmation at policy boundaries. Persist a trace of decisions, validated arguments,
     results, errors, and final output with sensitive fields redacted.
     """),
+    md(r"""
+    ## 22.3 Parallel calls, cancellation, and mutation safety
+
+    Execute parallel calls only when they are independent, read-only or separately idempotent, and within a global
+    concurrency limit. Preserve tool-call IDs so results return to the correct requests. Cancel outstanding calls when
+    the client disconnects or the answer is complete, but remember that cancellation cannot undo an already committed
+    external effect. Use deadlines rather than unbounded per-call timeouts.
+
+    Mutating tools accept a host-generated idempotency key and authenticated actor context outside model-controlled
+    arguments. Split proposal from commit: the model proposes a typed action, policy validates it, a user may approve
+    its immutable digest, and an executor commits once and returns a receipt. A retry returns that receipt. Notebook 25
+    turns these rules into a durable workflow.
+    """),
+    code(r'''
+    import asyncio, hashlib
+    async def bounded_read(expression, semaphore):
+        async with semaphore:
+            await asyncio.sleep(0)
+            return safe_calculator(expression)
+    semaphore = asyncio.Semaphore(2)
+    expressions = ["2+2", "17*23", "81/9"]
+    results = await asyncio.gather(*(bounded_read(value, semaphore) for value in expressions))
+    print(dict(zip(expressions, results)))
+    proposal = {"tool":"publish", "arguments":{"artifact":"report-7"}}
+    print("approval digest:", hashlib.sha256(json.dumps(proposal, sort_keys=True).encode()).hexdigest())
+    ''') ,
 ], [
     "Add a typed lookup tool and tests for malformed arguments.",
     "Detect repeated calls and stop with a diagnostic trace.",
     "Create an evaluation set for tool selection, arguments, and final answers.",
 ])
 
-add("05_agents_mcp/23_mcp_server_hf_client.ipynb", "Building an MCP Server for an HF Agent", [
+add("05_agents_mcp/23_huggingface_smolagents.ipynb", "Building Agents with Hugging Face smolagents", [
+    "Rebuild the explicit agent loop with ToolCallingAgent and understand every abstraction",
+    "Compare structured tool calling with code agents, planning, memory, and managed agents",
+    "Connect local Transformers, Ollama, or vLLM inference without hiding security boundaries",
+], [
+    md(r"""
+    ## 23.1 Why use a framework after building the loop yourself?
+
+    Notebook 22 made the control loop explicit: the model proposes an action, trusted code validates and executes it,
+    the observation returns to context, and deterministic limits decide whether another step is allowed. An agent
+    framework packages this state machine, tool schemas, prompting, memory, streaming, and model adapters. It saves
+    implementation work but does not own your authorization, data policy, or product correctness.
+
+    Hugging Face `smolagents` fits this course because it is open, compact, and supports both structured tool calling
+    and code-producing agents. Treat its APIs as one concrete implementation of general concepts. Pin the version;
+    inspect generated prompts and traces; and keep business logic outside framework-specific message objects.
+    """),
+    code(r'''
+    import importlib.util, json, os
+    SMOLAGENTS_AVAILABLE = importlib.util.find_spec("smolagents") is not None
+    print("smolagents installed:", SMOLAGENTS_AVAILABLE)
+    # Colab setup installs it. Locally: uv add smolagents, or keep reading the executable contracts below.
+    ''') ,
+    md(r"""
+    ## 23.2 Typed tools are contracts
+
+    A tool name and description influence selection; type hints and argument descriptions constrain generation; the
+    implementation defines the real capability. Make tools narrow, deterministic where possible, and explicit about
+    units, allowed identifiers, errors, and side effects. Validate again inside the implementation. Do not expose a
+    generic shell, arbitrary URL fetch, or unrestricted SQL interface because a schema makes it look tidy.
+
+    `smolagents.tool` converts a typed, documented function into a tool. Production wrappers should add authenticated
+    caller context outside model-controlled arguments, idempotency keys for retryable mutations, deadlines, output
+    limits, structured audit events, and redaction. The model must never choose its own tenant or permission scope.
+    """),
+    code(r'''
+    if SMOLAGENTS_AVAILABLE:
+        from smolagents import tool
+        @tool
+        def multiply(a: int, b: int) -> int:
+            """Multiply two bounded integers.
+
+            Args:
+                a: First integer between -10000 and 10000.
+                b: Second integer between -10000 and 10000.
+            """
+            if not all(-10_000 <= value <= 10_000 for value in (a, b)): raise ValueError("out of range")
+            return a * b
+        print(multiply.name, multiply.description, multiply.inputs)
+    else:
+        print("Expected schema: multiply(a: integer, b: integer) -> integer")
+    ''') ,
+    md(r"""
+    ## 23.3 ToolCallingAgent versus CodeAgent
+
+    `ToolCallingAgent` asks a capable chat model for structured calls. It is a good default when actions fit a small
+    schema and every call should be inspectable. `CodeAgent` expresses actions as code, which can compose loops,
+    transformations, and multiple tool calls efficiently. Code is also a much larger capability: local execution can
+    read files, consume resources, or escape assumptions unless isolated.
+
+    Prefer structured calls for consequential business operations. Use code agents for analysis when a sandbox has
+    explicit filesystem/network/import/resource limits and disposable state. `smolagents` exposes executor choices,
+    but naming an executor “sandboxed” is not enough; threat-model its host, credentials, mounts, network, kernel,
+    timeouts, and output channels.
+    """),
+    code(r'''
+    agent_choice = {
+        "send_invoice": "ToolCallingAgent: typed, approved, idempotent mutation",
+        "analyze_local_table": "CodeAgent in an isolated executor",
+        "lookup_order": "ToolCallingAgent: narrow read-only operation",
+        "arbitrary_shell": "Do not expose; replace with task-specific tools",
+    }
+    for task, choice in agent_choice.items(): print(f"{task:24} -> {choice}")
+    ''') ,
+    md(r"""
+    ## 23.4 Model adapters and a guarded agent
+
+    Agent quality depends on the model's exact chat template and tool-use training. A general text model may emit
+    malformed calls even when it writes fluent answers. `smolagents` can connect to Hugging Face inference and local
+    OpenAI-compatible servers; keeping a model adapter narrow makes it possible to switch among local Transformers,
+    Ollama, and vLLM after conformance tests.
+
+    The following construction is opt-in because it may perform remote inference. Credentials come from Colab Secrets
+    or `.env`, never notebook literals. Begin with read-only tools, `max_steps`, deterministic decoding, and trace
+    inspection. Production also needs total token/time/cost budgets and cancellation propagation.
+    """),
+    code(r'''
+    RUN_AGENT = False
+    if RUN_AGENT and SMOLAGENTS_AVAILABLE:
+        from smolagents import InferenceClientModel, ToolCallingAgent
+        model = InferenceClientModel(model_id=os.getenv("HF_AGENT_MODEL", "Qwen/Qwen2.5-7B-Instruct"),
+                                     token=os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_TOKEN"))
+        agent = ToolCallingAgent(tools=[multiply], model=model, max_steps=4, planning_interval=2)
+        answer = agent.run("Use the tool to compute 137 times 42, then explain the result briefly.")
+        print(answer)
+        agent.memory.replay(detailed=False)
+    else:
+        print("Agent run skipped. Configure credentials/model and opt in after reviewing the tool boundary.")
+    ''') ,
+    md(r"""
+    ## 23.5 Planning, memory, and managed agents
+
+    Planning intervals ask the model to periodically reconsider progress. Planning can help long tasks but consumes
+    tokens and may produce confident fiction. A plan is working state, not authorization. Agent memory records task,
+    action, observation, error, and planning steps for the current run; it should be bounded and redacted before
+    persistence. Summaries can omit constraints, so retain authoritative structured state separately.
+
+    Managed agents let a coordinator delegate to specialists described like tools. Define typed task/result contracts,
+    isolate tools and credentials, cap depth and fan-out, and record lineage. Do not share entire histories by default.
+    Notebook 26 develops multi-agent workflow patterns and demonstrates why delegation is an architectural cost, not
+    a free accuracy multiplier.
+    """),
+    code(r'''
+    trace = [
+        {"step":0, "kind":"task", "content":"compute and explain"},
+        {"step":1, "kind":"action", "tool":"multiply", "arguments":{"a":137,"b":42}},
+        {"step":1, "kind":"observation", "content":5754},
+        {"step":2, "kind":"final", "content":"137 × 42 = 5754."},
+    ]
+    allowed_trace_fields = {"step", "kind", "tool", "arguments", "content"}
+    print(json.dumps([{k:v for k,v in event.items() if k in allowed_trace_fields} for event in trace], indent=2))
+    ''') ,
+    md(r"""
+    ## 23.6 Testing and portability
+
+    Unit-test tools without a model. Contract-test schemas against the model template. Replay frozen model actions into
+    fake tools. Inject timeouts, malformed results, unavailable dependencies, duplicate requests, and permission
+    denials. Evaluate final success plus tool selection, arguments, unnecessary calls, step count, recovery, latency,
+    and side effects. Never let nondeterministic live APIs make the only CI test.
+
+    Exporting or serializing an agent can capture prompts and tool code, but deployments still need dependency locks,
+    model/template revisions, secret injection, network policy, permissions, and monitoring. Treat Hub artifacts as
+    untrusted code/data until reviewed. Framework upgrades are release changes because default prompts, parsing, memory,
+    and model adapters can alter behavior.
+    """),
+], [
+    "Implement the same bounded task with the custom loop and ToolCallingAgent; compare traces.",
+    "Create a CodeAgent threat model and a sandbox policy before enabling execution.",
+    "Build a fake model adapter that returns malformed, repeated, and unauthorized calls for tests.",
+])
+
+add("05_agents_mcp/24_mcp_server_hf_client.ipynb", "Building an MCP Server for an HF Agent", [
     "Distinguish MCP tools, resources, prompts, and transports",
     "Create and inspect a FastMCP server from a notebook",
     "Bridge discovered MCP tools into a Hugging Face agent safely",
 ], [
     md(r"""
-    ## 23.1 MCP standardizes context integration
+    ## 24.1 MCP standardizes context integration
 
     An MCP host connects to servers through clients. Servers expose tools (actions),
     resources (readable context), and prompts (templates). The protocol standardizes
@@ -2209,30 +2377,483 @@ add("05_agents_mcp/23_mcp_server_hf_client.ipynb", "Building an MCP Server for a
     await inspect_server()
     '''),
     md(r"""
-    ## 23.2 Bridge deliberately
+    ## 24.2 Bridge deliberately
 
     Convert MCP schemas to the chat model's tool format, but keep execution in the host.
     Maintain an allowlist by server/tool, validate every argument again, cap response sizes,
     sanitize errors, and treat resource/tool contents as untrusted. Network transports need
     authentication and origin controls; local stdio servers inherit process privileges.
     """),
+    md(r"""
+    ## 24.3 Full capability surface and lifecycle
+
+    Initialization negotiates a protocol version and capabilities before normal operation. Servers may expose tools,
+    resources and templates, prompts, logging, completion suggestions, notifications, and experimental tasks. Clients
+    may expose roots, sampling, elicitation, and task support. Both sides must use only negotiated capabilities and
+    should tolerate pagination and list-change notifications. Shutdown uses transport semantics.
+
+    Tools represent model-controlled actions. Resources are application-controlled context identified by URIs. Prompts
+    are user-selectable templates rather than hidden system policy. Roots communicate filesystem scope but do not grant
+    authorization by themselves. Sampling lets a server request model generation through the client without receiving
+    the user's model credential; the client retains model choice, review, and approval responsibility.
+    """),
+    code(r'''
+    capability_contract = {
+        "server": ["tools", "resources", "prompts", "logging", "completions", "tasks"],
+        "client": ["roots", "sampling", "sampling.tools", "elicitation", "tasks"],
+    }
+    for side, capabilities in capability_contract.items(): print(side, "->", ", ".join(capabilities))
+    ''') ,
+    md(r"""
+    ## 24.4 Transports, authorization, and identity
+
+    Stdio is appropriate for a host-launched local subprocess. Credentials come from its environment and should be
+    narrowed to that server; stdout belongs to protocol traffic and diagnostics go to stderr. Streamable HTTP requires
+    authenticated transport design, Origin validation, protocol-version headers, session/resumption handling according
+    to the negotiated specification version, and bounded request/stream resources.
+
+    HTTP authorization is separate from tool arguments. Verify user and client identity server-side, request incremental
+    scopes, prevent token passthrough and confused-deputy behavior, and bind authorization to the actual resource. Never
+    trust a model claim such as “the user approved.” Elicitation UI must identify the requesting server, permit refusal,
+    validate returned fields, and never request passwords or API keys through form-mode elicitation.
+    """),
+    code(r'''
+    policy = {
+        ("course-notes", "word_count"): {"effect":"read", "approval":False, "max_calls":20},
+        ("course-notes", "publish_notes"): {"effect":"external_write", "approval":True, "max_calls":1},
+    }
+    requested = ("course-notes", "publish_notes")
+    print("host decision:", policy.get(requested, {"deny":True}))
+    ''') ,
+    md(r"""
+    ## 24.5 Sampling, elicitation, tasks, and untrusted content
+
+    Sampling requests may include tool choices when the client advertises support. Display or policy-check the proposed
+    prompt, cap tokens, restrict tools, and avoid automatically injecting context from unrelated servers. Elicitation
+    collects non-sensitive structured information or directs a user through a URL flow; bind completion to the initiating
+    user to prevent phishing. Experimental tasks support polling, cancellation, and deferred retrieval for long work;
+    version-gate them because the surface is evolving.
+
+    Everything returned by a server is untrusted: resource text can inject prompts, icons can contain active content,
+    tool results can be oversized, and schemas or descriptions can manipulate selection. Isolate each server connection,
+    namespace capabilities, cap payloads, sanitize rendered content, disallow credential forwarding, and prevent one
+    server from learning another server's resources unless the host explicitly permits it.
+    """),
+    code(r'''
+    def approve_sampling(request, allowed_tools=frozenset({"word_count"}), max_tokens=512):
+        proposed = {tool["name"] for tool in request.get("tools", [])}
+        return {"approved": proposed <= allowed_tools and request.get("maxTokens", 0) <= max_tokens,
+                "tools": sorted(proposed), "bounded_tokens": min(request.get("maxTokens", 0), max_tokens)}
+    print(approve_sampling({"maxTokens":200, "tools":[{"name":"word_count"}]}))
+    print(approve_sampling({"maxTokens":5000, "tools":[{"name":"shell"}]}))
+    ''') ,
 ], [
     "Add a parameterized resource and read it through the client.",
     "Write a host policy that permits reads but requires approval for writes.",
     "Threat-model a malicious MCP server returning prompt-injection text.",
+    "Add a prompt, root, paginated list, and mocked sampling request with capability checks.",
+    "Design Streamable HTTP authorization and elicitation flows without token passthrough.",
 ])
 
 # ---------------------------------------------------------------------------
 # Module 6 — Evaluation and security
 # ---------------------------------------------------------------------------
 
-add("06_evaluation_security/24_evaluation_fundamentals.ipynb", "Evaluation Fundamentals and Regression Testing", [
+add("05_agents_mcp/25_durable_agent_workflows_memory.ipynb", "Durable Agent Workflows, Memory, and Human Approval", [
+    "Model agents as resumable state machines with idempotent side effects",
+    "Separate working, episodic, semantic, procedural, and user-profile memory",
+    "Design pause/resume, approval, cancellation, retries, and recovery for long-running work",
+], [
+    md(r"""
+    ## 25.1 An agent run is a workflow with nondeterministic nodes
+
+    A chat loop held in process memory disappears on restart and cannot safely wait hours for approval. Production
+    work needs explicit state, named transitions, durable checkpoints, and an event history. Model calls are
+    nondeterministic decision nodes; validation, authorization, tool execution, and state transitions should be
+    deterministic wherever possible. A graph framework can implement this, but the invariants belong to the system.
+
+    Store authoritative facts in typed state rather than reconstructing them from prose. Include run and tenant IDs,
+    status, step/version, budgets, approved plan version, pending action, completed action receipts, and deadlines.
+    Optimistic concurrency or serialized ownership prevents two workers from advancing the same run.
+    """),
+    code(r'''
+    from dataclasses import dataclass, field, asdict
+    from enum import Enum
+    class Status(str, Enum): READY="ready"; WAITING="waiting_approval"; RUNNING="running"; DONE="done"; FAILED="failed"; CANCELLED="cancelled"
+    @dataclass
+    class RunState:
+        run_id: str; tenant_id: str; status: Status = Status.READY; version: int = 0
+        remaining_steps: int = 8; pending_action: dict | None = None
+        receipts: dict[str, dict] = field(default_factory=dict)
+    state = RunState("run-42", "tenant-a")
+    print(asdict(state))
+    ''') ,
+    md(r"""
+    ## 25.2 Checkpoints, replay, and side effects
+
+    Persist before and after externally visible actions. Retrying a model read is usually wasteful but retrying a
+    payment, message, or deployment can duplicate harm. Give mutations stable idempotency keys derived from the
+    approved action—not from a transient attempt—and require downstream tools to return receipts. On resume, inspect
+    the receipt store before executing.
+
+    Event sourcing records immutable proposals, approvals, executions, observations, cancellations, and errors. A
+    materialized state accelerates reads but can be rebuilt from events. Never replay side effects to rebuild state.
+    Schema-version checkpoints and migrations; encrypt sensitive fields; enforce tenant access; and set retention.
+    """),
+    code(r'''
+    import hashlib, json
+    def action_key(run_id, action):
+        canonical = json.dumps(action, sort_keys=True, separators=(",", ":"))
+        return hashlib.sha256(f"{run_id}:{canonical}".encode()).hexdigest()
+    action = {"tool":"publish_report", "arguments":{"report_id":"r-7"}}
+    key = action_key(state.run_id, action)
+    state.receipts[key] = {"status":"committed", "external_id":"publication-91"}
+    print("retry decision:", "return receipt" if key in state.receipts else "execute")
+    ''') ,
+    md(r"""
+    ## 25.3 Human-in-the-loop is a state transition
+
+    Approval should display the exact effect, target, arguments, data leaving the boundary, estimated cost, and
+    rollback limits. Bind approval to an immutable action hash and expiry. If the model changes an argument, request
+    new approval. Record approver identity through authenticated application context; text saying “approved” is not
+    authorization. Support reject, edit, request-more-information, and cancel—not only yes.
+
+    An interrupt persists state and yields a user-visible request. Resume supplies a structured decision under
+    optimistic concurrency. The workflow revalidates current policy because permissions or external state may have
+    changed while waiting. Timeouts enter an explicit state rather than silently approving or retrying.
+    """),
+    code(r'''
+    def request_approval(state, action):
+        state.pending_action = {**action, "hash": action_key(state.run_id, action), "expires_at":"2026-09-03T00:00:00Z"}
+        state.status = Status.WAITING; state.version += 1
+        return {"run_id":state.run_id, "version":state.version, "requested":state.pending_action}
+    print(request_approval(state, {"tool":"send_email", "arguments":{"recipient":"owner@example.invalid"}}))
+    ''') ,
+    md(r"""
+    ## 25.4 Memory is several systems
+
+    Working memory is the bounded current trajectory. Episodic memory stores past runs and outcomes. Semantic memory
+    retrieves durable facts. Procedural memory contains instructions and policies. User-profile memory stores approved
+    preferences. Do not combine them into one vector database. Each has different writers, truth authority, access,
+    lifetime, deletion, and conflict semantics.
+
+    Memory writes are consequential: require provenance, timestamps, tenant/user ownership, confidence, expiry, and
+    a reason for retention. Prefer application-derived facts over model summaries. Retrieve with authorization filters
+    applied inside the query, rerank, expose provenance, and let current authoritative records override stale memory.
+    Poisoned tool output or prompt injection must not become permanent policy.
+    """),
+    code(r'''
+    memories = [
+        {"kind":"profile", "fact":"prefers concise reports", "source":"user_setting", "expires":None},
+        {"kind":"episodic", "fact":"deployment failed health check", "source":"run-39", "expires":"2026-10-01"},
+        {"kind":"semantic", "fact":"service owner is team-x", "source":"catalog@17", "expires":"2026-09-03"},
+    ]
+    writable_by_model = {"working"}
+    for memory in memories: print(memory["kind"], "model may directly write:", memory["kind"] in writable_by_model)
+    ''') ,
+    md(r"""
+    ## 25.5 Context engineering and compaction
+
+    Build context from typed state, current task, relevant observations, policies, retrieved memory, and tool schemas
+    under an explicit token budget. Drop redundant raw traces only after preserving action receipts and unresolved
+    constraints. Summaries are lossy and potentially incorrect; store links to original events and validate critical
+    fields separately. Do not expose every tool and memory on every step.
+
+    Compaction policies should be deterministic and tested: retain system constraints, open commitments, errors,
+    approvals, latest results, and citations; summarize low-priority dialogue; evict obsolete observations. Measure
+    success, prompt tokens, forgotten-constraint rate, and injection persistence before adopting a memory strategy.
+    """),
+    code(r'''
+    events = [{"kind":"constraint","text":"never publish without approval","priority":100},
+              {"kind":"observation","text":"draft has 1200 words","priority":40},
+              {"kind":"chat","text":"thanks","priority":1}]
+    budget_items = 2
+    selected = sorted(events, key=lambda event:event["priority"], reverse=True)[:budget_items]
+    print("context:", selected)
+    ''') ,
+    md(r"""
+    ## 25.6 Cancellation, faults, and framework mapping
+
+    Cancellation must propagate to queued model calls and tools, while acknowledging that an external side effect may
+    already have committed. Distinguish transient transport errors, invalid model actions, policy denials, tool-domain
+    errors, and permanent failures. Retry only classified transient operations with bounded attempts and jitter.
+    Compensating actions are domain workflows, not automatic rollback.
+
+    LangGraph-style checkpointers and interrupts are one implementation of durable pause/resume; workflow engines and
+    databases can provide the same invariants. Test crash points before/after every state write and side effect. Replay
+    deterministic nodes from captured events, inject worker loss, expire approvals, change permissions during waits,
+    and verify exactly-once effect semantics or explicitly documented at-least-once behavior.
+    """),
+], [
+    "Implement a crash-safe two-phase tool action with an idempotency receipt.",
+    "Design memory schemas and deletion policies for all five memory categories.",
+    "Test an approval that becomes stale after its proposed arguments change.",
+])
+
+add("05_agents_mcp/26_multi_agent_workflows.ipynb", "Multi-Agent Workflows and Coordination", [
+    "Implement supervisor-worker, handoff, parallel fan-out, debate, and specialist patterns",
+    "Define typed delegation, state isolation, permissions, budgets, and deterministic aggregation",
+    "Evaluate whether multiple agents improve outcomes enough to justify coordination cost",
+], [
+    md(r"""
+    ## 26.1 What “multi-agent” means in a workflow
+
+    A multi-agent system gives two or more model-controlled roles distinct context, instructions, tools, or authority
+    and coordinates their outputs. It may be a supervisor delegating subtasks, a sequence of specialist handoffs,
+    parallel workers with an aggregator, or independent proposal and critique. Multiple labels in one prompt are not
+    operational isolation; real boundaries require separate state and capability enforcement.
+
+    Start with a deterministic workflow or one agent with multiple tools. Add agents when specialization, context
+    isolation, parallelizable work, independent verification, or different permission domains produce measured value.
+    Additional agents multiply tokens, latency, correlated errors, prompt-injection paths, and debugging complexity.
+    """),
+    code(r'''
+    patterns = {
+        "supervisor-worker":"dynamic delegation and synthesis",
+        "sequential handoff":"specialist owns the next typed state transition",
+        "parallel fan-out":"independent subtasks followed by deterministic aggregation",
+        "proposal-critic":"separate candidate generation and verification",
+        "committee/debate":"diverse judgments with an explicit stopping/selection rule",
+    }
+    for name, purpose in patterns.items(): print(f"{name:20} | {purpose}")
+    ''') ,
+    md(r"""
+    ## 26.2 Delegation is a typed contract
+
+    A task envelope includes objective, inputs by reference, constraints, allowed tools, output schema, budget,
+    deadline, provenance, parent run, and success criteria. Workers receive least privilege and only necessary context.
+    Their result includes status, structured output, evidence, uncertainty, resource use, and errors. Natural-language
+    delegation alone invites scope drift and makes retries ambiguous.
+
+    The supervisor may select workers but cannot grant capabilities it does not possess. Identity and tenant context
+    come from the host. Delegation depth, fan-out, total calls, tokens, wall time, and spend need global and per-worker
+    limits. A worker cannot recursively create agents unless explicitly allowed.
+    """),
+    code(r'''
+    from dataclasses import dataclass
+    @dataclass(frozen=True)
+    class TaskEnvelope:
+        task_id: str; role: str; objective: str; allowed_tools: tuple[str,...]
+        max_steps: int; max_tokens: int; parent_run: str
+    tasks = [TaskEnvelope("t1","retriever","find supporting sources",("search",),3,1200,"run-1"),
+             TaskEnvelope("t2","analyst","check numerical claims",("calculator",),3,1200,"run-1")]
+    print(tasks)
+    ''') ,
+    md(r"""
+    ## 26.3 Parallel specialists and deterministic aggregation
+
+    Fan out only independent work. Workers should not mutate shared state concurrently; collect immutable results and
+    merge in a deterministic node. Preserve ordering and worker identity. Deduplicate evidence, resolve schema-level
+    conflicts, and escalate substantive disagreement rather than asking an aggregator to conceal it in fluent prose.
+
+    Parallelism reduces wall time only when model/tool infrastructure supports concurrency and shared bottlenecks do
+    not dominate. Bound simultaneous requests and cancel siblings when the task is resolved. Partial failure policy—
+    fail closed, return partial evidence, retry, or use a fallback—belongs in the workflow contract.
+    """),
+    code(r'''
+    import asyncio
+    async def worker(task):
+        await asyncio.sleep(0.01)
+        return {"task_id":task.task_id, "role":task.role, "status":"ok", "claims":[task.objective]}
+    results = await asyncio.gather(*(worker(task) for task in tasks))
+    merged = {"status":"ok" if all(r["status"]=="ok" for r in results) else "partial",
+              "results":sorted(results, key=lambda r:r["task_id"])}
+    print(merged)
+    ''') ,
+    md(r"""
+    ## 26.4 Supervisors, handoffs, and shared state
+
+    Supervisors decompose work and route results, but an unconstrained supervisor can loop, duplicate tasks, or route
+    sensitive data incorrectly. Restrict available roles and validate every envelope. Sequential handoffs are useful
+    when research, drafting, review, and approval own different state transitions; the next role receives a compact
+    typed artifact rather than the entire hidden transcript.
+
+    Shared blackboards simplify coordination but become injection and race-condition surfaces. Prefer append-only
+    events and namespaced worker scratch space. Separate authoritative workflow state from agent observations. Use
+    optimistic concurrency for updates and make ownership of each field explicit.
+    """),
+    code(r'''
+    routing = {"needs_sources":"retriever", "needs_math":"analyst", "ready_to_write":"writer",
+               "consequential_action":"human_approval"}
+    proposed_state = "consequential_action"
+    next_owner = routing[proposed_state]
+    print("deterministic boundary routes to:", next_owner)
+    ''') ,
+    md(r"""
+    ## 26.5 Critics, debate, and diversity
+
+    A critic should use an independent rubric or verifier, not merely echo the proposer. Blind worker identity and
+    randomize ordering to reduce position and authority bias. Debate can surface assumptions but can also converge on
+    persuasive shared errors. Diversity requires different evidence, prompts, models, tools, or seeds—not different
+    job titles alone.
+
+    Define a stopping rule and selector before the discussion. Prefer deterministic tests for code, arithmetic,
+    schemas, and citations. Preserve unresolved dissent in the final result. Never use majority vote when all agents
+    share the same flawed source or when one safety failure is disqualifying.
+    """),
+    code(r'''
+    proposals = [{"worker":"a","answer":42,"evidence":{"test-1"}},
+                 {"worker":"b","answer":42,"evidence":{"test-2"}},
+                 {"worker":"c","answer":41,"evidence":set()}]
+    verified = [p for p in proposals if p["answer"] == 42 and p["evidence"]]
+    print("accepted:", verified, "unresolved dissent:", [p for p in proposals if p not in verified])
+    ''') ,
+    md(r"""
+    ## 26.6 Multi-agent security and evaluation
+
+    Give workers distinct service identities, tool allowlists, data scopes, and network boundaries. Do not forward one
+    worker's credentials or raw context to another. Label messages by authenticated origin outside model text. Treat
+    every inter-agent message as untrusted; prevent a compromised retriever from instructing a deployment worker.
+    Consequential actions pass through deterministic authorization and human approval regardless of consensus.
+
+    Compare multi-agent against single-agent and deterministic baselines under matched models, token/cost budgets, and
+    time. Measure task success, critical failures, tool accuracy, duplicated work, conflicts, fan-out, depth, total
+    tokens, latency, intervention, and recovery. Ablate each role. If removing an agent does not hurt frozen evaluation,
+    remove the complexity. This notebook therefore covers the multi-agent workflows commonly used in practice while
+    treating coordination as an evidence-driven systems decision.
+    """),
+], [
+    "Build a supervisor with a strict role registry and reject recursive or over-budget delegation.",
+    "Compare parallel specialists with one agent under equal total token and tool-call budgets.",
+    "Inject a malicious worker message and prove it cannot expand another worker's permissions.",
+])
+
+add("05_agents_mcp/27_agent_evaluation_sandboxing.ipynb", "Agent Evaluation, Sandboxing, and Trajectory Observability", [
+    "Evaluate decisions, trajectories, effects, and resource use rather than final text alone",
+    "Build deterministic simulated tools, replay tests, fault injection, and approval assertions",
+    "Threat-model browser, coding, computer-use, and long-running agents with enforceable sandboxes",
+], [
+    md(r"""
+    ## 27.1 The trajectory is the product behavior
+
+    Two agents can return the same answer while one leaked data, called unnecessary tools, ignored a denial, or spent
+    ten times the budget. Evaluation units include task, decision step, tool call, observation, state transition,
+    external effect, final answer, and complete run. Preserve structured traces with model/template/tool/policy versions
+    and authenticated effect receipts.
+
+    Define success and forbidden outcomes before collecting examples. Final correctness, groundedness, tool selection,
+    argument validity, call precision/recall, recovery, step count, latency, tokens, cost, side effects, and human
+    interventions need separate measures. Never average a catastrophic unauthorized action into a good overall score.
+    """),
+    code(r'''
+    trace = [{"kind":"model_action","tool":"lookup","args":{"id":"A"}},
+             {"kind":"tool_result","tool":"lookup","status":"ok","value":17},
+             {"kind":"model_action","tool":"calculator","args":{"expression":"17*2"}},
+             {"kind":"tool_result","tool":"calculator","status":"ok","value":34},
+             {"kind":"final","answer":"34"}]
+    expected_tools = {"lookup","calculator"}
+    actual_tools = {event["tool"] for event in trace if event["kind"]=="model_action"}
+    print({"tool_recall":len(actual_tools&expected_tools)/len(expected_tools),
+           "unnecessary_tools":len(actual_tools-expected_tools), "steps":len(trace)})
+    ''') ,
+    md(r"""
+    ## 27.2 Deterministic environments and replay
+
+    Replace live tools with versioned fakes in CI. A scenario defines initial state, observations, permitted actions,
+    injected failures, hidden assertions, and terminal conditions. Replay captured model actions into the same fake to
+    test policy and executor changes; replay captured tool results into the planner to test model/prompt changes.
+    Separating these halves makes regressions diagnosable.
+
+    Golden trajectories are not the only valid path, so assert invariants and acceptable effects rather than exact
+    prose. Metamorphic tests rename identifiers, reorder irrelevant context, perturb formatting, and vary transient
+    failures while preserving the required outcome. Seeded sampling improves comparison but does not promise identical
+    outputs across runtimes.
+    """),
+    code(r'''
+    class FakeLedger:
+        def __init__(self): self.calls=[]; self.fail_once=True
+        def lookup(self, item_id):
+            self.calls.append(("lookup",item_id))
+            if self.fail_once: self.fail_once=False; raise TimeoutError("injected")
+            return {"id":item_id,"value":17}
+    ledger=FakeLedger()
+    for attempt in range(2):
+        try: print(ledger.lookup("A")); break
+        except TimeoutError: print("bounded retry", attempt+1)
+    assert ledger.calls == [("lookup","A"),("lookup","A")]
+    ''') ,
+    md(r"""
+    ## 27.3 Fault and adversarial matrix
+
+    Inject malformed model JSON, unknown tools, schema violations, oversized observations, tool timeouts, rate limits,
+    stale state, duplicate delivery, partial streams, worker crashes, permission revocation, cancellation, poisoned
+    memory, malicious retrieved text, and conflicting agents. Expected behavior may be repair, bounded retry, fallback,
+    approval, abstention, or safe failure. It is never an unbounded loop.
+
+    Red-team indirect prompt injection from webpages, files, email, issues, documents, MCP resources, and tool errors.
+    Ensure untrusted content cannot change system policy, reveal secrets, expand tools, or authorize effects. Maintain
+    exploit fixtures in regression suites after remediation.
+    """),
+    code(r'''
+    cases = [{"fault":"unknown_tool","expected":"reject"}, {"fault":"timeout","expected":"bounded_retry"},
+             {"fault":"permission_revoked","expected":"deny"}, {"fault":"injection_in_result","expected":"treat_as_data"},
+             {"fault":"duplicate_mutation","expected":"return_idempotent_receipt"}]
+    print(*cases, sep="\n")
+    ''') ,
+    md(r"""
+    ## 27.4 Browser, computer-use, and coding sandboxes
+
+    Browser/computer agents observe partial, changing state. DOM elements move, screenshots become stale, pages contain
+    hostile instructions, and clicks can purchase, publish, or delete. Re-observe before consequential actions, bind
+    approvals to current targets, constrain navigation and downloads, isolate cookies, and confirm effects through
+    trusted application state. Visual text is untrusted just like retrieved text.
+
+    Coding agents require disposable processes or VMs/containers with explicit filesystem mounts, no host credentials,
+    denied network by default, CPU/memory/process/time/output limits, dependency policy, and artifact scanning. A Python
+    import allowlist is not an operating-system sandbox. Preserve patches and test results; require approval before
+    publishing, deploying, messaging, or modifying resources outside the workspace.
+    """),
+    code(r'''
+    sandbox_policy = {"filesystem":"ephemeral + explicit read-only inputs", "network":"deny by default",
+                      "secrets":"none", "cpu_seconds":30, "memory_mib":512, "processes":16,
+                      "output_kib":256, "external_writes":"approval gateway"}
+    print(sandbox_policy)
+    ''') ,
+    md(r"""
+    ## 27.5 Observability without surveillance
+
+    Trace model calls, validation, policy, queueing, tools, approvals, and effects with correlation IDs and durations.
+    Record model/template/tool/policy revisions, token counts, retries, stop reason, state version, and redacted error
+    classes. Metrics include success by slice, critical violation rate, tool validity, denial adherence, loop exhaustion,
+    latency percentiles, total tokens, and intervention rate.
+
+    Prompts, memory, screenshots, files, and tool results can contain personal data and secrets. Minimize collection,
+    redact before export, separate restricted payloads from operational metadata, encrypt, restrict access, define
+    retention/deletion, and audit trace viewers. Sampling full content “for debugging” is a data system requiring review.
+    """),
+    code(r'''
+    events = [{"run":"r1","status":"success","tokens":800,"tool_calls":2,"violations":0},
+              {"run":"r2","status":"failed","tokens":1600,"tool_calls":8,"violations":0},
+              {"run":"r3","status":"failed","tokens":400,"tool_calls":1,"violations":1}]
+    print({"success_rate":sum(e["status"]=="success" for e in events)/len(events),
+           "critical_violation_rate":sum(e["violations"]>0 for e in events)/len(events),
+           "tokens_per_success":sum(e["tokens"] for e in events)/max(1,sum(e["status"]=="success" for e in events))})
+    ''') ,
+    md(r"""
+    ## 27.6 Release evaluation
+
+    Build task suites from representative workflows, rare consequential actions, production failures, and adversarial
+    scenarios. Split development from frozen release gates. Compare prompts, models, frameworks, and multi-agent designs
+    under equal permissions and realistic token/time budgets. Use paired runs and uncertainty; inspect slice regressions.
+
+    Before promotion, require zero known critical authorization/effect violations, bounded behavior under every injected
+    fault, tested cancellation and resume, sandbox escape review, quality and latency thresholds, and a rollback drill.
+    Canary with limited scopes and monitor effect-level outcomes. Agent evaluation is continuous because tools, websites,
+    schemas, permissions, and models change independently.
+    """),
+], [
+    "Create a deterministic scenario runner with ten fault injections and invariant assertions.",
+    "Compare single-agent and multi-agent trajectories under equal budgets.",
+    "Threat-model a coding agent sandbox and demonstrate why language-level restrictions are insufficient.",
+])
+
+add("06_evaluation_security/28_evaluation_fundamentals.ipynb", "Evaluation Fundamentals and Regression Testing", [
     "Turn product requirements into representative datasets and graders",
     "Combine deterministic, statistical, retrieval, model-based, and human evaluation",
     "Compare systems with slices, uncertainty, and regression gates",
 ], [
     md(r"""
-    ## 24.1 Begin with decisions
+    ## 28.1 Begin with decisions
 
     An evaluation is evidence for a decision: ship a prompt, choose a model, accept a
     training run, or diagnose a failure. Define the unit, population, success criterion,
@@ -2253,7 +2874,7 @@ add("06_evaluation_security/24_evaluation_fundamentals.ipynb", "Evaluation Funda
         print(row)
     '''),
     md(r"""
-    ## 24.2 Match graders to failure modes
+    ## 28.2 Match graders to failure modes
 
     Use executable tests for code, schema validators for structure, exact/set comparison for
     constrained answers, retrieval metrics for ranking, and expert review for domain nuance.
@@ -2271,7 +2892,7 @@ add("06_evaluation_security/24_evaluation_fundamentals.ipynb", "Evaluation Funda
     print(f"score={mean:.3f}, illustrative bootstrap interval=({lo:.3f}, {hi:.3f})")
     '''),
     md(r"""
-    ## 24.3 Comparisons and gates
+    ## 28.3 Comparisons and gates
 
     Pair outputs by example when comparing systems. Report delta and confidence interval,
     not two isolated averages. Slice by language, length, risk, source, tool, and no-answer
@@ -2285,13 +2906,13 @@ add("06_evaluation_security/24_evaluation_fundamentals.ipynb", "Evaluation Funda
     "Compare two systems with a paired bootstrap and slice table.",
 ])
 
-add("06_evaluation_security/25_llm_as_a_judge.ipynb", "LLM as a Judge", [
+add("06_evaluation_security/29_llm_as_a_judge.ipynb", "LLM as a Judge", [
     "Design a criterion-level rubric and structured judge output",
     "Run pointwise and order-swapped pairwise judging with HF models",
     "Calibrate judge agreement and route uncertainty to humans",
 ], [
     md(r"""
-    ## 25.1 A judge is a measurement instrument
+    ## 29.1 A judge is a measurement instrument
 
     Separate correctness, relevance, completeness, and clarity. Define anchored score levels,
     decisive evidence, critical errors, and tie behavior. Candidate text is untrusted data.
@@ -2343,7 +2964,7 @@ add("06_evaluation_security/25_llm_as_a_judge.ipynb", "LLM as a Judge", [
         "It accumulates gradients from several microbatches before one optimizer update."))
     '''),
     md(r"""
-    ## 25.2 Bias controls
+    ## 29.2 Bias controls
 
     Pairwise judges can prefer answer position, verbosity, familiar style, or their own model
     family. Randomize hidden labels and judge both A/B and B/A; mark inconsistent pairs for
@@ -2364,13 +2985,13 @@ add("06_evaluation_security/25_llm_as_a_judge.ipynb", "LLM as a Judge", [
     "Calibrate two judge models against at least 50 human-labeled examples.",
 ])
 
-add("06_evaluation_security/26_llm_application_security.ipynb", "LLM Application Security", [
+add("06_evaluation_security/30_llm_application_security.ipynb", "LLM Application Security", [
     "Threat-model prompt injection, exfiltration, unsafe tools, and resource abuse",
     "Apply least privilege, validation, isolation, and approval controls",
     "Build adversarial tests and distinguish safety classification from security",
 ], [
     md(r"""
-    ## 26.1 Trust boundaries
+    ## 30.1 Trust boundaries
 
     System prompts, user text, retrieved documents, web pages, tool results, MCP resources,
     and model output have different origins but share one context window. Instructions in
@@ -2389,7 +3010,7 @@ add("06_evaluation_security/26_llm_application_security.ipynb", "LLM Application
     print("Delimiting preserves provenance for policy/evaluation; it does not neutralize text.")
     '''),
     md(r"""
-    ## 26.2 Defense in depth
+    ## 30.2 Defense in depth
 
     - Give each tool the minimum identity, scope, network access, and filesystem access.
     - Validate arguments against schemas plus semantic allowlists.
@@ -2416,7 +3037,7 @@ add("06_evaluation_security/26_llm_application_security.ipynb", "LLM Application
         except ValueError as exc: print("blocked", url, exc)
     '''),
     md(r"""
-    ## 26.3 Test the abuse cases
+    ## 30.3 Test the abuse cases
 
     Maintain direct/indirect injection, encoded instructions, conflicting sources, tool
     argument attacks, SSRF paths, cross-tenant identifiers, oversized content, repeated-call
@@ -2434,13 +3055,13 @@ add("06_evaluation_security/26_llm_application_security.ipynb", "LLM Application
 # Module 7 — Multimodal
 # ---------------------------------------------------------------------------
 
-add("06_evaluation_security/27_experiment_tracking_model_governance.ipynb", "Experiment Tracking, Model Governance, and Release Engineering", [
+add("06_evaluation_security/31_experiment_tracking_model_governance.ipynb", "Experiment Tracking, Model Governance, and Release Engineering", [
     "Define immutable lineage across code, data, models, prompts, evaluation, and serving",
     "Build reproducibility manifests, model cards, promotion gates, and rollback records",
     "Separate technical evidence from ownership, approval, risk, privacy, and license decisions",
 ], [
     md(r"""
-    ## 27.1 The model is a dependency graph
+    ## 31.1 The model is a dependency graph
 
     A deployed LLM behavior is produced by weights, tokenizer, chat template, adapters, retrieval indexes,
     prompts, tool schemas, decoding parameters, safety policies, inference engine, and hardware. Recording only
@@ -2466,7 +3087,7 @@ add("06_evaluation_security/27_experiment_tracking_model_governance.ipynb", "Exp
     print(json.dumps(manifest, indent=2))
     ''') ,
     md(r"""
-    ## 27.2 Run records and reproducibility
+    ## 31.2 Run records and reproducibility
 
     Capture code commit and dirty-state diff, dependency lock, container digest, hardware/driver/runtime, seeds,
     precision, distributed topology, environment variables by name but never secret values, input artifact hashes,
@@ -2486,7 +3107,7 @@ add("06_evaluation_security/27_experiment_tracking_model_governance.ipynb", "Exp
     print("manifest identity:", sha256_bytes(canonical))
     ''') ,
     md(r"""
-    ## 27.3 Data, licensing, and privacy lineage
+    ## 31.3 Data, licensing, and privacy lineage
 
     Dataset lineage includes sources, acquisition dates, licenses, consent or lawful basis where applicable,
     transformations, filters, deduplication, splits, synthetic generators, human annotation guidance, removals,
@@ -2510,7 +3131,7 @@ add("06_evaluation_security/27_experiment_tracking_model_governance.ipynb", "Exp
     print("adapter ancestry:", ancestors("adapter-v7"))
     ''') ,
     md(r"""
-    ## 27.4 Evaluation evidence and promotion gates
+    ## 31.4 Evaluation evidence and promotion gates
 
     A promotion compares a candidate with the currently approved baseline on frozen target capability, general
     retention, safety/security, calibration, subgroup slices, latency, throughput, and cost. Define thresholds and
@@ -2534,7 +3155,7 @@ add("06_evaluation_security/27_experiment_tracking_model_governance.ipynb", "Exp
     print("promote:", all(passes(g) or not g["blocking"] for g in gates))
     ''') ,
     md(r"""
-    ## 27.5 Model cards, system cards, and accountability
+    ## 31.5 Model cards, system cards, and accountability
 
     A model card documents architecture, provenance, training, evaluations, intended uses, excluded uses, biases,
     limitations, environmental/compute information, license, and contact. A system card expands to retrieval, tools,
@@ -2547,7 +3168,7 @@ add("06_evaluation_security/27_experiment_tracking_model_governance.ipynb", "Exp
     consequence—not parameter count alone.
     """),
     md(r"""
-    ## 27.6 Rollout, monitoring, rollback, and retirement
+    ## 31.6 Rollout, monitoring, rollback, and retirement
 
     Use immutable release bundles, staging, shadow traffic, small canaries, progressive exposure, and automatic
     rollback criteria. Monitor quality proxies cautiously alongside errors, latency, token usage, refusals, retrieval
@@ -2566,13 +3187,13 @@ add("06_evaluation_security/27_experiment_tracking_model_governance.ipynb", "Exp
     "Write a rollback drill that includes tokenizer, prompt, retrieval index, and inference engine.",
 ])
 
-add("07_multimodal/28_vision_language_models.ipynb", "Vision-Language Models and Document Understanding", [
+add("07_multimodal/32_vision_language_models.ipynb", "Vision-Language Models and Document Understanding", [
     "Understand processor inputs, image tokens, resolution, and memory costs",
     "Run a guarded Hugging Face image-text-to-text example",
     "Evaluate OCR, charts, spatial reasoning, and grounded structured output",
 ], [
     md(r"""
-    ## 28.1 A multimodal request has two representations
+    ## 32.1 A multimodal request has two representations
 
     A processor transforms images (resize/crop/normalize/patchify) and text (tokenize/chat
     template) into model inputs. Visual encoders or native multimodal blocks create visual
@@ -2602,7 +3223,7 @@ add("07_multimodal/28_vision_language_models.ipynb", "Vision-Language Models and
         print("Remote example skipped: configure HUGGINGFACE_TOKEN.")
     '''),
     md(r"""
-    ## 28.2 Documents are not just images
+    ## 32.2 Documents are not just images
 
     PDFs may contain extractable text, tables, reading order, vector graphics, scans, and
     metadata. Prefer native extraction where reliable; use OCR/VLMs for visual structure and
@@ -2610,7 +3231,7 @@ add("07_multimodal/28_vision_language_models.ipynb", "Vision-Language Models and
     retain evidence regions. Defend against visual prompt injection in screenshots/documents.
     """),
     md(r"""
-    ## 28.3 Evaluate by capability
+    ## 32.3 Evaluate by capability
 
     Use exact field accuracy for extraction, normalized edit distance for OCR, table cell
     metrics, bounding-box overlap for grounding, and expert labels for chart reasoning.
@@ -2627,13 +3248,13 @@ add("07_multimodal/28_vision_language_models.ipynb", "Vision-Language Models and
 # Module 8 — Production
 # ---------------------------------------------------------------------------
 
-add("08_production/29_reliability_observability.ipynb", "Reliability, Observability, and Load Testing", [
+add("08_production/33_reliability_observability.ipynb", "Reliability, Observability, and Load Testing", [
     "Instrument latency, tokens, errors, quality, and cost with safe metadata",
     "Implement bounded concurrency, retries, cancellation, and backpressure",
     "Design load tests and deployment regression gates",
 ], [
     md(r"""
-    ## 29.1 Observe the full request lifecycle
+    ## 33.1 Observe the full request lifecycle
 
     Correlate request ID, trace ID, tenant-safe identifier, model/revision, prompt version,
     decoding config, queue time, TTFT, generation time, input/output tokens, finish reason,
@@ -2671,7 +3292,7 @@ add("08_production/29_reliability_observability.ipynb", "Reliability, Observabil
     print(results)
     '''),
     md(r"""
-    ## 29.2 Failure policy
+    ## 33.2 Failure policy
 
     Retry only transient, idempotent operations; respect server retry hints; add jitter; cap
     attempts and total deadline. Bound queues and concurrency—unbounded retries amplify
@@ -2680,7 +3301,7 @@ add("08_production/29_reliability_observability.ipynb", "Reliability, Observabil
     but can synchronize failures without randomized recovery.
     """),
     md(r"""
-    ## 29.3 Load and regression testing
+    ## 33.3 Load and regression testing
 
     Replay realistic distributions of prompt length, output length, streaming, retrieval,
     and tool use. Warm the system, increase offered load, and report p50/p95/p99 TTFT and
@@ -2694,13 +3315,13 @@ add("08_production/29_reliability_observability.ipynb", "Reliability, Observabil
     "Design a privacy-preserving trace sampling and retention policy.",
 ])
 
-add("08_production/30_quantization_model_formats.ipynb", "Quantization and Deployment Model Formats", [
+add("08_production/34_quantization_model_formats.ipynb", "Quantization and Deployment Model Formats", [
     "Distinguish weight, activation, and KV-cache quantization across training and serving",
     "Compare bitsandbytes, GPTQ, AWQ, FP8, GGUF, and Safetensors without conflating format and method",
     "Design calibration and quality-performance evaluations before producing deployment artifacts",
 ], [
     md(r"""
-    ## 30.1 Quantization changes representation and sometimes computation
+    ## 34.1 Quantization changes representation and sometimes computation
 
     Quantization represents values with fewer bits or restricted numeric formats to reduce memory bandwidth,
     capacity, and sometimes latency. Weight-only quantization compresses parameters while activations remain at
@@ -2718,7 +3339,7 @@ add("08_production/30_quantization_model_formats.ipynb", "Quantization and Deplo
     print("Scales, zero-points, metadata, temporary buffers, and KV cache are additional.")
     ''') ,
     md(r"""
-    ## 30.2 Numeric model
+    ## 34.2 Numeric model
 
     Uniform affine quantization maps values approximately as `q = clamp(round(x/scale) + zero_point)` and
     reconstructs `x_hat = scale*(q-zero_point)`. Per-channel scales preserve different output-channel ranges;
@@ -2741,7 +3362,7 @@ add("08_production/30_quantization_model_formats.ipynb", "Quantization and Deplo
            "mae": (x-restored).abs().mean().item(), "max_error": (x-restored).abs().max().item()})
     ''') ,
     md(r"""
-    ## 30.3 Method and container are different layers
+    ## 34.3 Method and container are different layers
 
     Safetensors is a safe, efficiently loadable tensor container; it does not imply a precision. Transformers
     repositories combine weights with config, tokenizer, chat template, and generation metadata. bitsandbytes
@@ -2765,7 +3386,7 @@ add("08_production/30_quantization_model_formats.ipynb", "Quantization and Deplo
     for row in matrix: print(" | ".join(row))
     ''') ,
     md(r"""
-    ## 30.4 Calibration and sensitivity
+    ## 34.4 Calibration and sensitivity
 
     Calibration samples should represent deployment languages, domains, lengths, modalities, chat templates, and
     activation outliers. Hundreds of copied generic sentences may optimize the wrong distribution. Keep calibration
@@ -2786,7 +3407,7 @@ add("08_production/30_quantization_model_formats.ipynb", "Quantization and Deplo
     print(results, "quality gate:", results["task_accuracy"] >= -.01 and results["schema_validity"] >= -.005)
     ''') ,
     md(r"""
-    ## 30.5 Hugging Face loading pattern
+    ## 34.5 Hugging Face loading pattern
 
     Transformers integrates quantization configurations, but support depends on model, hardware, Accelerate,
     library versions, and the installed backend. The guarded pattern below documents intent without pretending a
@@ -2809,7 +3430,7 @@ add("08_production/30_quantization_model_formats.ipynb", "Quantization and Deplo
         print("4-bit load skipped; requires a supported accelerator and bitsandbytes installation.")
     ''') ,
     md(r"""
-    ## 30.6 Benchmark, publish, and roll back
+    ## 34.6 Benchmark, publish, and roll back
 
     Measure artifact bytes, peak resident memory, maximum sustainable concurrent tokens, TTFT, inter-token latency,
     total tokens/second, energy/cost, cold-load time, and quality. Warm up kernels and report hardware, engine,
@@ -2827,13 +3448,13 @@ add("08_production/30_quantization_model_formats.ipynb", "Quantization and Deplo
     "Write a derivative model card containing every conversion and rollback artifact.",
 ])
 
-add("08_production/31_serving_engine_comparison.ipynb", "Choosing an Open-Model Serving Engine", [
+add("08_production/35_serving_engine_comparison.ipynb", "Choosing an Open-Model Serving Engine", [
     "Compare Transformers, llama.cpp/MLX, Ollama, vLLM, SGLang, and managed HF endpoints by workload",
     "Build protocol conformance and quality/performance benchmark contracts",
     "Avoid architecture decisions based on feature checklists without hardware-specific evidence",
 ], [
     md(r"""
-    ## 31.1 Start with the workload
+    ## 35.1 Start with the workload
 
     Engine selection follows constraints: model architectures and formats, accelerator/CPU platform, single-user
     versus concurrent traffic, prompt/output distributions, latency SLOs, adapters, structured output, tools,
@@ -2860,7 +3481,7 @@ add("08_production/31_serving_engine_comparison.ipynb", "Choosing an Open-Model 
     print("Illustrative scores force priorities; replace with measured evidence.")
     ''') ,
     md(r"""
-    ## 31.2 A compatibility matrix is versioned evidence
+    ## 35.2 A compatibility matrix is versioned evidence
 
     Test the exact model and engine image for tokenizer/chat-template behavior, context length, streaming, logprobs,
     seed handling, stop strings, JSON Schema, tools, reasoning fields, embeddings, LoRA, quantizations, speculative
@@ -2878,7 +3499,7 @@ add("08_production/31_serving_engine_comparison.ipynb", "Choosing an Open-Model 
     for engine, features in observed.items(): print(engine, "missing:", sorted(required_contract-features))
     ''') ,
     md(r"""
-    ## 31.3 Performance methodology
+    ## 35.3 Performance methodology
 
     Separate cold model load, prefill/TTFT, decode/inter-token latency, end-to-end percentiles, and aggregate prompt/
     output tokens per second. Use realistic length distributions, arrival processes, concurrency, cancellations, and
@@ -2898,7 +3519,7 @@ add("08_production/31_serving_engine_comparison.ipynb", "Choosing an Open-Model 
            "output_tokens_per_wall_second": sum(x["output"] for x in samples)/max(x["latency"] for x in samples)})
     ''') ,
     md(r"""
-    ## 31.4 Memory, batching, and topology
+    ## 35.4 Memory, batching, and topology
 
     Capacity includes weights, KV cache for all live tokens, workspaces, graphs, adapter state, runtime overhead, and
     fragmentation. Quantization reduces selected components, not all memory. Prefix caching benefits repeated exact
@@ -2916,7 +3537,7 @@ add("08_production/31_serving_engine_comparison.ipynb", "Choosing an Open-Model 
     for tokens in [8_000, 64_000, 256_000]: print(tokens, round(kv_gib(32, 8, 128, tokens), 2), "GiB KV")
     ''') ,
     md(r"""
-    ## 31.5 Operations and security
+    ## 35.5 Operations and security
 
     Require readiness distinct from liveness, graceful drain, bounded queues, admission control by total tokens,
     deadlines, cancellation propagation, per-tenant limits, and observable queue/prefill/decode stages. Pin container,
@@ -2928,7 +3549,7 @@ add("08_production/31_serving_engine_comparison.ipynb", "Choosing an Open-Model 
     downloads. The inference engine must not become the authorization layer for tools or retrieval.
     """),
     md(r"""
-    ## 31.6 Decision process
+    ## 35.6 Decision process
 
     Shortlist engines that satisfy hard compatibility, platform, license, and security constraints. Run conformance
     and frozen quality tests, then benchmark viable candidates on target hardware. Estimate operational cost and
@@ -2945,13 +3566,13 @@ add("08_production/31_serving_engine_comparison.ipynb", "Choosing an Open-Model 
     "Create an architecture decision record with explicit reconsideration triggers.",
 ])
 
-add("08_production/32_ollama_local_serving.ipynb", "Local Model Serving with Ollama", [
+add("08_production/36_ollama_local_serving.ipynb", "Local Model Serving with Ollama", [
     "Choose Ollama for local, private, low-operations inference and distinguish it from vLLM",
     "Package a model with a Modelfile and use native and OpenAI-compatible HTTP APIs",
     "Implement structured output, embeddings, streaming, benchmarking, and production safeguards",
 ], [
     md(r"""
-    ## 32.1 Where Ollama fits
+    ## 36.1 Where Ollama fits
 
     Ollama packages model acquisition, quantized local inference, prompt templates, and an HTTP server
     behind a small developer interface. It is especially useful for laptops, workstations, offline or
@@ -2987,7 +3608,7 @@ add("08_production/32_ollama_local_serving.ipynb", "Local Model Serving with Oll
     print(f"If needed, run in a terminal: ollama pull {OLLAMA_MODEL}")
     ''') ,
     md(r"""
-    ## 32.2 Model lifecycle and reproducibility
+    ## 36.2 Model lifecycle and reproducibility
 
     Model names include tags, and tags may move. Record the resolved model metadata and digest with your
     application release. Pulling weights is a material network/storage operation, so it remains an explicit
@@ -3026,7 +3647,7 @@ add("08_production/32_ollama_local_serving.ipynb", "Local Model Serving with Oll
         print("Skipped: start Ollama and pull the configured model first.")
     ''') ,
     md(r"""
-    ## 32.3 Streaming and portable clients
+    ## 36.3 Streaming and portable clients
 
     The native API can stream newline-delimited JSON chunks. A robust client uses incremental parsing,
     handles timeouts and disconnects, distinguishes transport failure from model refusal, and records usage
@@ -3054,7 +3675,7 @@ add("08_production/32_ollama_local_serving.ipynb", "Local Model Serving with Oll
         print("Portable API example skipped; server/model unavailable.")
     ''') ,
     md(r"""
-    ## 32.4 Structured output is constrained generation plus validation
+    ## 36.4 Structured output is constrained generation plus validation
 
     The native chat API accepts JSON or a JSON Schema in `format`; the compatible API exposes structured
     response formats where supported. Constraining decoding reduces malformed syntax, but a schema cannot
@@ -3080,7 +3701,7 @@ add("08_production/32_ollama_local_serving.ipynb", "Local Model Serving with Oll
         print("Structured-output example skipped; schema construction still ran.")
     ''') ,
     md(r"""
-    ## 32.5 Local embeddings and RAG
+    ## 36.5 Local embeddings and RAG
 
     `/api/embed` accepts one string or a list and returns vectors. Use a model intended for embeddings;
     generation-model hidden states are not automatically good retrieval vectors. Pin the embedding model and
@@ -3101,13 +3722,13 @@ add("08_production/32_ollama_local_serving.ipynb", "Local Model Serving with Oll
         print(f"Skipped. Optional setup: ollama pull {EMBEDDING_MODEL}")
     ''') ,
     md(r"""
-    ## 32.6 Benchmark and operate the service you actually have
+    ## 36.6 Benchmark and operate the service you actually have
 
     Separate cold-load time, time to first token, prompt evaluation rate, generation rate, end-to-end latency,
     and concurrency. Ollama responses expose nanosecond duration and token-count fields; convert units and avoid
     mixing prefill with decode throughput. Run warmups, use realistic prompt/output lengths, report quantization
     and resident memory, and include p50/p95/p99 rather than averages alone. Compare quality before declaring a
-    smaller quantization “faster.” Notebook 29 supplies a more complete load-test discipline.
+    smaller quantization “faster.” Notebook 33 supplies a more complete load-test discipline.
 
     Bind to loopback unless remote access is intentional. If exposed, place authentication, TLS, rate limits,
     request-size limits, tenant isolation, and audit controls in a trusted reverse proxy or application layer.
@@ -3143,13 +3764,13 @@ add("08_production/32_ollama_local_serving.ipynb", "Local Model Serving with Oll
     "Threat-model exposing Ollama beyond localhost and design the required gateway controls.",
 ])
 
-add("08_production/33_vllm_serving.ipynb", "Serving Open Models with vLLM", [
+add("08_production/37_vllm_serving.ipynb", "Serving Open Models with vLLM", [
     "Launch and call an OpenAI-compatible vLLM server",
     "Relate continuous batching and paged KV management to throughput",
     "Plan capacity, parallelism, structured output, monitoring, and secure deployment",
 ], [
     md(r"""
-    ## 33.1 Serving changes the optimization target
+    ## 37.1 Serving changes the optimization target
 
     Local `generate()` is useful for experiments. A server must schedule concurrent requests,
     manage variable KV-cache allocations, stream, reject overload, expose health/metrics, and
@@ -3157,7 +3778,7 @@ add("08_production/33_vllm_serving.ipynb", "Serving Open Models with vLLM", [
     admits new sequences as others finish; block-based KV management reduces fragmentation.
     """),
     md(r"""
-    ## 33.2 Start on a supported accelerator host
+    ## 37.2 Start on a supported accelerator host
 
     Install vLLM according to the current accelerator-specific instructions, then run:
 
@@ -3188,7 +3809,7 @@ add("08_production/33_vllm_serving.ipynb", "Serving Open Models with vLLM", [
         print("Start the vLLM server, then rerun:", type(exc).__name__)
     '''),
     md(r"""
-    ## 33.3 Structured output and APIs
+    ## 37.3 Structured output and APIs
 
     Current vLLM releases support OpenAI-compatible chat/completions plus health, model, and
     Prometheus metrics endpoints. Structured constraints are passed in the current
@@ -3203,7 +3824,7 @@ add("08_production/33_vllm_serving.ipynb", "Serving Open Models with vLLM", [
     print(payload_extension)
     '''),
     md(r"""
-    ## 33.4 Scale only after measuring
+    ## 37.4 Scale only after measuring
 
     Tensor parallelism shards a model across GPUs; data parallelism replicates it for more
     traffic; pipeline/expert parallelism address other model/topology constraints. Communication

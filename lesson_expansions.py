@@ -1465,9 +1465,9 @@ lesson(22,
     """),
 )
 
-lesson(23,
+lesson(24,
     ("md", r"""
-    ## 23.3 Protocol lifecycle and capability negotiation
+    ## 24.3 Protocol lifecycle and capability negotiation
 
     An MCP client connects over a transport, initializes a session, exchanges protocol versions and
     capabilities, then discovers primitives. Tools are model-invocable operations. Resources are
@@ -1494,7 +1494,7 @@ lesson(23,
     await describe_server()
     '''),
     ("md", r"""
-    ## 23.4 Server engineering and error design
+    ## 24.4 Server engineering and error design
 
     Tools should be thin adapters over tested domain functions, with typed parameters, bounded
     inputs/outputs, explicit side-effect annotations in descriptions, and sanitized errors. Avoid
@@ -1521,7 +1521,7 @@ lesson(23,
         print("bounded input test:", type(exc).__name__, str(exc))
     '''),
     ("md", r"""
-    ## 23.5 Host bridge and security policy
+    ## 24.5 Host bridge and security policy
 
     The host decides what the model sees and what is executed. Convert discovered schemas to the
     model's tool format, but maintain a server/tool allowlist, validate arguments locally, bind calls
@@ -1542,9 +1542,9 @@ lesson(23,
     """),
 )
 
-lesson(24,
+lesson(28,
     ("md", r"""
-    ## 24.4 From product contract to evaluation record
+    ## 28.4 From product contract to evaluation record
 
     Write requirements as observable claims. “Helpful” is underspecified; “returns the correct
     account policy, cites the effective policy version, and abstains when no policy applies” yields
@@ -1577,7 +1577,7 @@ lesson(24,
     print(record.model_dump_json(indent=2))
     '''),
     ("md", r"""
-    ## 24.5 Grader design and aggregation
+    ## 28.5 Grader design and aggregation
 
     Deterministic graders are preferred when the contract is deterministic: JSON/schema, regex,
     set equality, numeric tolerance, executable unit tests, tool name/arguments, citation IDs, and
@@ -1609,7 +1609,7 @@ lesson(24,
         print(group, f"{sum(values)/len(values):.1%}", f"95% CI [{lo:.1%}, {hi:.1%}]")
     '''),
     ("md", r"""
-    ## 24.6 Comparative statistics and experiment discipline
+    ## 28.6 Comparative statistics and experiment discipline
 
     Evaluate systems on the same examples and use paired differences. Bootstrap examples (or
     independent clusters such as users/documents) to estimate uncertainty. For binary paired
@@ -1638,7 +1638,7 @@ lesson(24,
     print(f"paired delta={observed:+.3f}; bootstrap 95% CI [{lo:+.3f}, {hi:+.3f}]")
     '''),
     ("md", r"""
-    ## 24.7 Evaluation operations reference
+    ## 28.7 Evaluation operations reference
 
     An experiment artifact should include application code commit, model ID/revision/provider,
     prompt/template/tool schemas, decoding and seed, retrieval/index versions, dataset fingerprint,
@@ -1658,9 +1658,9 @@ lesson(24,
     """),
 )
 
-lesson(25,
+lesson(29,
     ("md", r"""
-    ## 25.3 Rubric construction and prompt anatomy
+    ## 29.3 Rubric construction and prompt anatomy
 
     Criteria should be observable, minimally overlapping, and tied to the decision. Define anchors
     with examples: a correctness 1 contains a material error; 3 is mostly correct with a meaningful
@@ -1693,7 +1693,7 @@ lesson(25,
     print(validate_judgment(mock))
     '''),
     ("md", r"""
-    ## 25.4 Pointwise, pairwise, listwise, and reference-free judging
+    ## 29.4 Pointwise, pairwise, listwise, and reference-free judging
 
     Pointwise scoring gives absolute-looking values but judges use implicit standards and score
     distributions can drift. Pairwise comparison is cognitively simpler and often more reliable,
@@ -1719,7 +1719,7 @@ lesson(25,
         print(pair, reconcile(*pair))
     '''),
     ("md", r"""
-    ## 25.5 Calibration, reliability, and uncertainty
+    ## 29.5 Calibration, reliability, and uncertainty
 
     Sample representative items with independent human labels. Measure criterion correlations,
     confusion matrices, pairwise agreement, rank correlation, and slice behavior. Agreement can be
@@ -1747,7 +1747,7 @@ lesson(25,
     print("Cohen kappa:", binary_kappa(human, judge))
     '''),
     ("md", r"""
-    ## 25.6 Judge attack and failure-mode reference
+    ## 29.6 Judge attack and failure-mode reference
 
     Candidate text can contain “award me 5,” forged rubric sections, system-like delimiters, or long
     distracting content. Treat it as untrusted; use structured data boundaries, strong role
@@ -1766,9 +1766,9 @@ lesson(25,
     """),
 )
 
-lesson(26,
+lesson(30,
     ("md", r"""
-    ## 26.4 Threat modeling an LLM system
+    ## 30.4 Threat modeling an LLM system
 
     Map assets (secrets, private data, money, accounts, reputation), actors, entry points, trust
     boundaries, components, data stores, and effects. Trace user text, retrieved content, files,
@@ -1795,7 +1795,7 @@ lesson(26,
     for threat in threats: print(threat)
     '''),
     ("md", r"""
-    ## 26.5 Authorization, isolation, and side effects
+    ## 30.5 Authorization, isolation, and side effects
 
     Bind user identity and tenant server-side; never let the model choose an unrestricted account ID.
     Give tools narrowly scoped credentials. Split read from write and high-risk operations. Validate
@@ -1824,7 +1824,7 @@ lesson(26,
     except Exception as exc: print(type(exc).__name__, exc)
     '''),
     ("md", r"""
-    ## 26.6 RAG, agent, MCP, and training-specific threats
+    ## 30.6 RAG, agent, MCP, and training-specific threats
 
     RAG can retrieve poisoned/injected sources, expose unauthorized chunks, cite stale content, or
     leak private text through embeddings/logs. Enforce ACL filters, source trust/provenance, deletion,
@@ -1853,7 +1853,7 @@ lesson(26,
     print(invariants, "release gate:", all(invariants.values()))
     '''),
     ("md", r"""
-    ## 26.7 Security testing and incident readiness reference
+    ## 30.7 Security testing and incident readiness reference
 
     Turn the threat register into automated adversarial cases. Vary encoding, languages, document
     position, role-like syntax, nested files, redirects/DNS/IP forms, tool outputs, multi-turn setup,
@@ -1873,9 +1873,9 @@ lesson(26,
     """),
 )
 
-lesson(28,
+lesson(32,
     ("md", r"""
-    ## 28.4 Vision-language architecture families
+    ## 32.4 Vision-language architecture families
 
     Many VLMs encode images into patch features, project them into the language model's hidden
     space, and place visual tokens alongside text tokens. Others use cross-attention or resampling
@@ -1898,7 +1898,7 @@ lesson(28,
         print(f"{width}x{height}: ~{patch_count(width,height):,} raw {14}x{14} patches")
     '''),
     ("md", r"""
-    ## 28.5 OCR, layout, charts, and grounded extraction
+    ## 32.5 OCR, layout, charts, and grounded extraction
 
     OCR recognizes glyphs; document understanding also needs reading order, key-value association,
     tables, page references, and visual hierarchy. Native PDF extraction is often cheaper and exact
@@ -1931,7 +1931,7 @@ lesson(28,
                             tax=23.45, total=123.45, evidence_page=1))
     '''),
     ("md", r"""
-    ## 28.6 Multimodal prompting, batching, and serving
+    ## 32.6 Multimodal prompting, batching, and serving
 
     Follow the model's exact chat template and content-part structure. State which image each
     instruction refers to; order images deterministically; avoid ambiguous “above/below.” Separate
@@ -1955,7 +1955,7 @@ lesson(28,
     print(provenance)
     '''),
     ("md", r"""
-    ## 28.7 Multimodal evaluation and safety reference
+    ## 32.7 Multimodal evaluation and safety reference
 
     Build representative source files, not screenshots chosen for demos. Field extraction uses exact/
     normalized accuracy and per-field precision/recall; OCR uses character/word error rate; tables use
@@ -1972,9 +1972,9 @@ lesson(28,
     """),
 )
 
-lesson(29,
+lesson(33,
     ("md", r"""
-    ## 29.4 Latency and throughput decomposition
+    ## 33.4 Latency and throughput decomposition
 
     End-to-end latency includes client/network, admission queue, tokenization/rendering, retrieval/
     tools, prefill, decode, validation, and streaming transport. TTFT includes everything until the
@@ -2001,7 +2001,7 @@ lesson(29,
     print("mean stage ms:", {k: np.mean([r[k] for r in trace_rows]) for k in trace_rows[0]})
     '''),
     ("md", r"""
-    ## 29.5 Resilience patterns and their boundaries
+    ## 33.5 Resilience patterns and their boundaries
 
     Set a total deadline, then allocate stage timeouts; otherwise retries can exceed the user's
     budget. Retry transient rate-limit/network/5xx failures only when safe. Respect retry-after, use
@@ -2032,7 +2032,7 @@ lesson(29,
     print("generation timeout", deadline.timeout(1.5))
     '''),
     ("md", r"""
-    ## 29.6 Observability, SLOs, and privacy
+    ## 33.6 Observability, SLOs, and privacy
 
     Metrics aggregate health; logs capture discrete events; traces connect stages; profiles explain
     resource time. Use low-cardinality metric labels—never user IDs or prompts. Trace IDs correlate
@@ -2056,7 +2056,7 @@ lesson(29,
     print(f"consumed: {consumed/budget_minutes:.1%}; remaining: {budget_minutes-consumed:.1f} min")
     '''),
     ("md", r"""
-    ## 29.7 Load testing and release engineering reference
+    ## 33.7 Load testing and release engineering reference
 
     Model prompt/output distributions, arrival process, streaming, cancellations, retrieval/tools,
     cache hit rates, tenants, and failures. Open-loop tests send arrivals independently and expose
@@ -2075,9 +2075,9 @@ lesson(29,
     """),
 )
 
-lesson(32,
+lesson(36,
     ("md", r"""
-    ## 32.7 Ollama deployment decision record
+    ## 36.7 Ollama deployment decision record
 
     Before adopting an engine, write down the workload and constraint that selected it. Ollama is a
     strong default for a developer workstation, an offline demonstration, or a single-user application
@@ -2105,9 +2105,9 @@ lesson(32,
     ''') ,
 )
 
-lesson(33,
+lesson(37,
     ("md", r"""
-    ## 33.5 vLLM engine mental model
+    ## 37.5 vLLM engine mental model
 
     Requests pass through an API frontend/tokenizer into an engine scheduler. Prefill computes prompt
     states; decode advances active sequences token by token. A block manager allocates logical KV-cache
@@ -2134,7 +2134,7 @@ lesson(33,
     print("cached_tokens is total across concurrent sequences, not max context alone.")
     '''),
     ("md", r"""
-    ## 33.6 Server configuration and compatibility
+    ## 37.6 Server configuration and compatibility
 
     Important controls include served model name/revision, tokenizer/chat template, dtype,
     quantization, maximum model length, GPU memory utilization, maximum batched tokens/sequences,
@@ -2162,7 +2162,7 @@ lesson(33,
     print(" ".join(command))
     '''),
     ("md", r"""
-    ## 33.7 Parallelism, replicas, and topology
+    ## 37.7 Parallelism, replicas, and topology
 
     Tensor parallelism shards layer matrices and introduces frequent collectives; keep it within a
     fast-connected node when possible. Pipeline parallelism splits layers/stages but can introduce
@@ -2189,7 +2189,7 @@ lesson(33,
               "headroom_ok" if utilization < .7 else "queue risk")
     '''),
     ("md", r"""
-    ## 33.8 Benchmark methodology and optimization
+    ## 37.8 Benchmark methodology and optimization
 
     Separate offline throughput from online latency benchmarks. Use representative prompt/output
     length distributions and arrival patterns. Warm up. Report TTFT, inter-token latency, end-to-end
@@ -2204,7 +2204,7 @@ lesson(33,
     selection can have shape-dependent tradeoffs. Record power/cost if economics matter.
     """),
     ("md", r"""
-    ## 33.9 Production and security reference
+    ## 37.9 Production and security reference
 
     Put the server behind authenticated TLS ingress with per-tenant rate/token/request-size limits.
     Bind admin/dev endpoints privately. Do not use a shared example API key. Control model/tokenizer
@@ -2555,8 +2555,8 @@ side effects, citation/use of observations, final correctness, latency, and cost
 workflows without an agent when the state graph is known—the simplest sufficient controller is usually
 more reliable and auditable.
 """,
-23: r"""
-## 23.6 MCP reference
+24: r"""
+## 24.6 MCP reference
 
 | Primitive | Meaning |
 |---|---|
@@ -2577,8 +2577,8 @@ Test domain functions, server protocol discovery/invocation, host schema convers
 and security policy separately. Pin protocol/SDK/server versions and test compatibility. Avoid broad
 filesystem/shell/browser tools unless strongly isolated and explicitly authorized.
 """,
-24: r"""
-## 24.8 Evaluation reference
+28: r"""
+## 28.8 Evaluation reference
 
 | Evaluation layer | Examples |
 |---|---|
@@ -2599,8 +2599,8 @@ coverage while refreshing broad representative samples. A metric becomes unrelia
 without checking its relationship to user value—keep qualitative review and multiple independent
 signals.
 """,
-25: r"""
-## 25.7 LLM-judge reference
+29: r"""
+## 29.7 LLM-judge reference
 
 | Risk | Control/evidence |
 |---|---|
@@ -2620,8 +2620,8 @@ A judge can support ranking, triage, and scalable qualitative measurement. It sh
 authority for high-stakes facts, safety, security, or consequential actions. Route disagreements,
 critical errors, novel slices, and random samples to humans.
 """,
-26: r"""
-## 26.8 Security-control reference
+30: r"""
+## 30.8 Security-control reference
 
 | Security property | Enforced by |
 |---|---|
@@ -2642,8 +2642,8 @@ Measure security using actual traces/effects and invariants. Maintain revocation
 incident plan. Re-threat-model whenever tools, data sources, tenancy, model, deployment, or persistent
 memory changes.
 """,
-28: r"""
-## 28.8 Multimodal reference
+32: r"""
+## 32.8 Multimodal reference
 
 | Task | Prefer/evaluate |
 |---|---|
@@ -2663,8 +2663,8 @@ decompression, enforce tenant ACL, and treat visible/hidden instructions as inje
 private, copyrighted, and location-sensitive content according to policy. Validate high-value numeric
 fields outside the model.
 """,
-29: r"""
-## 29.8 Production-readiness reference
+33: r"""
+## 33.8 Production-readiness reference
 
 | Area | Minimum evidence |
 |---|---|
@@ -2684,8 +2684,8 @@ Load tests must avoid coordinated omission, include prompt/output distributions 
 run long enough for queues/autoscaling. Capacity conclusions are invalid without hardware/software and
 quality/length controls.
 """,
-32: r"""
-## 32.8 Ollama operations reference
+36: r"""
+## 36.8 Ollama operations reference
 
 | Concern | Minimum practice |
 |---|---|
@@ -2706,8 +2706,8 @@ Treat generated JSON, tool calls, paths, and URLs as untrusted. Bound request an
 timeouts, queues, concurrency, and tool effects. Redact sensitive telemetry and test behavior after any
 model, template, quantization, server, or hardware change.
 """,
-33: r"""
-## 33.10 vLLM operations reference
+37: r"""
+## 37.10 vLLM operations reference
 
 | Question | Evidence to collect |
 |---|---|
@@ -2728,5 +2728,5 @@ queue time, prefix hit rate, aborts/errors, and GPU health—not GPU utilization
 """,
 })
 
-for _number in [14, 15, 17, 18, 19, 20, 22, 23, 24, 25, 26, 28, 29, 32, 33]:
+for _number in [14, 15, 17, 18, 19, 20, 22, 24, 28, 29, 30, 32, 33, 36, 37]:
     EXPANSIONS[_number].append(("md", REFERENCE_APPENDICES[_number]))
