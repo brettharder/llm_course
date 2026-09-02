@@ -1,6 +1,6 @@
 # Rigorous LLM Engineering — Hugging Face First
 
-[![Course validation](https://img.shields.io/badge/notebooks-26%20validated-2ea44f)](#validation)
+[![Course validation](https://img.shields.io/badge/notebooks-33%20validated-2ea44f)](#validation)
 [![Hugging Face](https://img.shields.io/badge/ecosystem-Hugging%20Face-FFD21E)](https://huggingface.co/)
 [![Google Colab](https://img.shields.io/badge/runtime-Google%20Colab-F9AB00)](COLAB.md)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776AB)](pyproject.toml)
@@ -27,14 +27,14 @@ standalone references.
 
 | Module | Notebooks |
 |---|---|
-| 1. Mathematical foundations | Tokens and causal modeling · Probability, loss, and gradients · Decoder transformer from scratch · Position encodings and RoPE · Efficient attention, GQA, FlashAttention, and KV caches |
-| 2. Training | Data pipelines and packing · Native PyTorch pretraining · Hugging Face random-initialized pretraining · Base-to-post-trained capability pathways · Optimization and distributed training · SFT with LoRA/QLoRA · Preference optimization with DPO |
+| 1. Mathematical foundations | Tokens and causal modeling · Probability, loss, and gradients · Decoder transformer from scratch · Position encodings and RoPE · Efficient attention and KV caches · Mixture-of-Experts |
+| 2. Training | Data pipelines · Synthetic data · Native and HF pretraining · Post-training pathways · Optimization and distributed training · SFT/LoRA · DPO · GRPO and verifiable rewards |
 | 3. Hugging Face inference | Hub, model cards, and inference · Generation, batching, streaming, and structured output |
-| 4. Retrieval | Embeddings and semantic search · End-to-end RAG and retrieval evaluation |
+| 4. Retrieval | Embeddings and semantic search · End-to-end RAG · Hybrid retrieval, reranking, compression, and grounded evaluation |
 | 5. Agents and MCP | Tool calling and agent loops · Building an MCP server |
-| 6. Evaluation and security | Evaluation fundamentals · LLM as a judge · LLM application security |
+| 6. Evaluation and security | Evaluation fundamentals · LLM as a judge · Application security · Experiment tracking and model governance |
 | 7. Multimodal | Vision-language models and document understanding |
-| 8. Production | Reliability, observability, and load testing · Local serving with Ollama · High-throughput serving with vLLM |
+| 8. Production | Reliability and load testing · Quantization and deployment formats · Engine comparison · Ollama · vLLM |
 
 ## Notebook index
 
@@ -47,27 +47,34 @@ Every notebook can be opened directly in Google Colab after the repository is pu
 | 3 | A decoder transformer from scratch | [Notebook](01_math_foundations/03_decoder_transformer.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/01_math_foundations/03_decoder_transformer.ipynb) |
 | 4 | Position encodings and RoPE | [Notebook](01_math_foundations/04_position_encodings_rope.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/01_math_foundations/04_position_encodings_rope.ipynb) |
 | 5 | Efficient attention and KV caches | [Notebook](01_math_foundations/05_efficient_attention.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/01_math_foundations/05_efficient_attention.ipynb) |
-| 6 | Training data, tokenization, and packing | [Notebook](02_training/06_data_tokenization_packing.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/02_training/06_data_tokenization_packing.ipynb) |
-| 7 | Pretraining a tiny decoder with native PyTorch | [Notebook](02_training/07_native_pytorch_pretraining.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/02_training/07_native_pytorch_pretraining.ipynb) |
-| 8 | Pretraining a random-initialized Hugging Face model | [Notebook](02_training/08_hf_random_init_pretraining.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/02_training/08_hf_random_init_pretraining.ipynb) |
-| 9 | From base model to instruction, reasoning, and tool use | [Notebook](02_training/09_base_to_posttrained_models.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/02_training/09_base_to_posttrained_models.ipynb) |
-| 10 | Optimization and training loops | [Notebook](02_training/10_optimization_training_loop.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/02_training/10_optimization_training_loop.ipynb) |
-| 11 | Efficient and distributed training | [Notebook](02_training/11_efficient_distributed_training.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/02_training/11_efficient_distributed_training.ipynb) |
-| 12 | SFT with LoRA and QLoRA | [Notebook](02_training/12_sft_lora_qlora.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/02_training/12_sft_lora_qlora.ipynb) |
-| 13 | Preference optimization with DPO | [Notebook](02_training/13_preference_optimization_dpo.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/02_training/13_preference_optimization_dpo.ipynb) |
-| 14 | Hub, model cards, and inference | [Notebook](03_huggingface/14_hub_models_inference.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/03_huggingface/14_hub_models_inference.ipynb) |
-| 15 | Generation, batching, streaming, and structured output | [Notebook](03_huggingface/15_generation_batching_structured.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/03_huggingface/15_generation_batching_structured.ipynb) |
-| 16 | Embeddings and semantic search | [Notebook](04_retrieval/16_embeddings_semantic_search.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/04_retrieval/16_embeddings_semantic_search.ipynb) |
-| 17 | End-to-end RAG and retrieval evaluation | [Notebook](04_retrieval/17_end_to_end_rag.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/04_retrieval/17_end_to_end_rag.ipynb) |
-| 18 | Tool calling and bounded agent loops | [Notebook](05_agents_mcp/18_tool_calling_agents.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/05_agents_mcp/18_tool_calling_agents.ipynb) |
-| 19 | Building an MCP server | [Notebook](05_agents_mcp/19_mcp_server_hf_client.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/05_agents_mcp/19_mcp_server_hf_client.ipynb) |
-| 20 | Evaluation fundamentals and regression testing | [Notebook](06_evaluation_security/20_evaluation_fundamentals.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/06_evaluation_security/20_evaluation_fundamentals.ipynb) |
-| 21 | LLM as a judge | [Notebook](06_evaluation_security/21_llm_as_a_judge.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/06_evaluation_security/21_llm_as_a_judge.ipynb) |
-| 22 | LLM application security | [Notebook](06_evaluation_security/22_llm_application_security.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/06_evaluation_security/22_llm_application_security.ipynb) |
-| 23 | Vision-language models and document understanding | [Notebook](07_multimodal/23_vision_language_models.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/07_multimodal/23_vision_language_models.ipynb) |
-| 24 | Reliability, observability, and load testing | [Notebook](08_production/24_reliability_observability.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/08_production/24_reliability_observability.ipynb) |
-| 25 | Local model serving with Ollama | [Notebook](08_production/25_ollama_local_serving.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/08_production/25_ollama_local_serving.ipynb) |
-| 26 | Serving open models with vLLM | [Notebook](08_production/26_vllm_serving.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/08_production/26_vllm_serving.ipynb) |
+| 6 | Mixture-of-Experts transformers | [Notebook](01_math_foundations/06_mixture_of_experts.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/01_math_foundations/06_mixture_of_experts.ipynb) |
+| 7 | Training data, tokenization, and packing | [Notebook](02_training/07_data_tokenization_packing.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/02_training/07_data_tokenization_packing.ipynb) |
+| 8 | Synthetic data pipelines | [Notebook](02_training/08_synthetic_data_pipelines.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/02_training/08_synthetic_data_pipelines.ipynb) |
+| 9 | Pretraining a tiny decoder with native PyTorch | [Notebook](02_training/09_native_pytorch_pretraining.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/02_training/09_native_pytorch_pretraining.ipynb) |
+| 10 | Pretraining a random-initialized Hugging Face model | [Notebook](02_training/10_hf_random_init_pretraining.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/02_training/10_hf_random_init_pretraining.ipynb) |
+| 11 | From base model to instruction, reasoning, and tool use | [Notebook](02_training/11_base_to_posttrained_models.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/02_training/11_base_to_posttrained_models.ipynb) |
+| 12 | Optimization and training loops | [Notebook](02_training/12_optimization_training_loop.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/02_training/12_optimization_training_loop.ipynb) |
+| 13 | Efficient and distributed training | [Notebook](02_training/13_efficient_distributed_training.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/02_training/13_efficient_distributed_training.ipynb) |
+| 14 | SFT with LoRA and QLoRA | [Notebook](02_training/14_sft_lora_qlora.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/02_training/14_sft_lora_qlora.ipynb) |
+| 15 | Preference optimization with DPO | [Notebook](02_training/15_preference_optimization_dpo.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/02_training/15_preference_optimization_dpo.ipynb) |
+| 16 | Reasoning post-training with GRPO and verifiable rewards | [Notebook](02_training/16_reasoning_grpo_verifiable_rewards.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/02_training/16_reasoning_grpo_verifiable_rewards.ipynb) |
+| 17 | Hub, model cards, and inference | [Notebook](03_huggingface/17_hub_models_inference.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/03_huggingface/17_hub_models_inference.ipynb) |
+| 18 | Generation, batching, streaming, and structured output | [Notebook](03_huggingface/18_generation_batching_structured.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/03_huggingface/18_generation_batching_structured.ipynb) |
+| 19 | Embeddings and semantic search | [Notebook](04_retrieval/19_embeddings_semantic_search.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/04_retrieval/19_embeddings_semantic_search.ipynb) |
+| 20 | End-to-end RAG and retrieval evaluation | [Notebook](04_retrieval/20_end_to_end_rag.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/04_retrieval/20_end_to_end_rag.ipynb) |
+| 21 | Advanced RAG | [Notebook](04_retrieval/21_advanced_rag.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/04_retrieval/21_advanced_rag.ipynb) |
+| 22 | Tool calling and bounded agent loops | [Notebook](05_agents_mcp/22_tool_calling_agents.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/05_agents_mcp/22_tool_calling_agents.ipynb) |
+| 23 | Building an MCP server | [Notebook](05_agents_mcp/23_mcp_server_hf_client.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/05_agents_mcp/23_mcp_server_hf_client.ipynb) |
+| 24 | Evaluation fundamentals and regression testing | [Notebook](06_evaluation_security/24_evaluation_fundamentals.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/06_evaluation_security/24_evaluation_fundamentals.ipynb) |
+| 25 | LLM as a judge | [Notebook](06_evaluation_security/25_llm_as_a_judge.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/06_evaluation_security/25_llm_as_a_judge.ipynb) |
+| 26 | LLM application security | [Notebook](06_evaluation_security/26_llm_application_security.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/06_evaluation_security/26_llm_application_security.ipynb) |
+| 27 | Experiment tracking, governance, and release engineering | [Notebook](06_evaluation_security/27_experiment_tracking_model_governance.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/06_evaluation_security/27_experiment_tracking_model_governance.ipynb) |
+| 28 | Vision-language models and document understanding | [Notebook](07_multimodal/28_vision_language_models.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/07_multimodal/28_vision_language_models.ipynb) |
+| 29 | Reliability, observability, and load testing | [Notebook](08_production/29_reliability_observability.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/08_production/29_reliability_observability.ipynb) |
+| 30 | Quantization and deployment model formats | [Notebook](08_production/30_quantization_model_formats.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/08_production/30_quantization_model_formats.ipynb) |
+| 31 | Choosing an open-model serving engine | [Notebook](08_production/31_serving_engine_comparison.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/08_production/31_serving_engine_comparison.ipynb) |
+| 32 | Local model serving with Ollama | [Notebook](08_production/32_ollama_local_serving.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/08_production/32_ollama_local_serving.ipynb) |
+| 33 | Serving open models with vLLM | [Notebook](08_production/33_vllm_serving.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/08_production/33_vllm_serving.ipynb) |
 
 ## Quick start
 
@@ -124,14 +131,14 @@ lesson depth so later edits do not accidentally collapse notebooks back into sho
 ## Project structure
 
 ```text
-01_math_foundations/       Decoder and mathematical foundations
-02_training/               Data, pretraining, post-training, optimization, SFT, and preferences
+01_math_foundations/       Decoder, attention, positional, and MoE foundations
+02_training/               Data, synthetic data, pretraining, SFT, preferences, and reasoning RL
 03_huggingface/            Hub and inference workflows
-04_retrieval/              Embeddings and RAG
+04_retrieval/              Embeddings, baseline RAG, hybrid retrieval, and reranking
 05_agents_mcp/             Tool agents and MCP
-06_evaluation_security/    Evaluation, judging, and security
+06_evaluation_security/    Evaluation, judging, security, governance, and release gates
 07_multimodal/             Vision-language systems
-08_production/             Reliability, Ollama local serving, and vLLM at scale
+08_production/             Reliability, quantization, engine selection, Ollama, and vLLM
 create_course.py           Notebook generator and core lessons
 lesson_expansions.py       Comprehensive lesson/reference expansions
 validate_course.py         Static course and security validation
