@@ -2139,7 +2139,11 @@ add("05_agents_mcp/32_tool_calling_agents.ipynb", "Tool Calling and Bounded Agen
                                  "content": json.dumps(result)})
         return "Stopped: step budget exhausted"
 
-    print(run_agent("What is (17 * 23) + 9?"))
+    RUN_REMOTE_AGENT = False  # Opt in: consumes hosted inference quota and depends on provider capacity.
+    if RUN_REMOTE_AGENT:
+        print(run_agent("What is (17 * 23) + 9?"))
+    else:
+        print("Remote agent skipped; set RUN_REMOTE_AGENT=True after configuring HUGGINGFACE_TOKEN.")
     '''),
     md(r"""
     ## 32.2 Reliability controls
@@ -3849,6 +3853,8 @@ add("08_production/48_vllm_serving.ipynb", "Serving Open Models with vLLM", [
 def write_course() -> None:
     from course_extensions import register
     register(add, md, code)
+    from course_deepening import register as register_deepening
+    register_deepening(LESSONS, md, code)
     LESSONS.sort(key=lambda item: int(Path(item[0]).stem.split("_", 1)[0]))
     for path, title, cells in LESSONS:
         target = ROOT / path

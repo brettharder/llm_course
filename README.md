@@ -13,6 +13,10 @@ Each notebook is designed as both a lesson and a reference. It includes a concep
 mathematical or systems detail, worked code examples, implementation guidance, failure modes,
 diagnostic checklists, a compact reference appendix, and exercises.
 
+The repository enforces a stronger lesson-quality floor covering explanatory depth, substantive
+sections, worked examples, Colab setup, syntax, clean outputs, and credential safety. See
+[COURSE_QUALITY.md](COURSE_QUALITY.md) for the teaching rubric and recommended study loop.
+
 ## Who this course is for
 
 The course is aimed at software engineers, ML practitioners, and technical learners who want to
@@ -143,7 +147,8 @@ uv run python create_course.py
 uv run python validate_course.py
 ```
 
-The generator and [lesson_expansions.py](lesson_expansions.py) are the source of truth.
+The generator, [lesson_expansions.py](lesson_expansions.py), [course_extensions.py](course_extensions.py),
+and [course_deepening.py](course_deepening.py) are the source of truth.
 Generated notebooks contain no saved outputs or credentials. Validation also enforces minimum
 lesson depth so later edits do not accidentally collapse notebooks back into short outlines.
 
@@ -162,6 +167,7 @@ lesson depth so later edits do not accidentally collapse notebooks back into sho
 09_capstones/              End-to-end model-building, grounded-assistant, and agent-system projects
 create_course.py           Notebook generator and core lessons
 course_extensions.py       Prerequisites, current-stack lessons, and capstones
+course_deepening.py        Lesson-specific derivations, diagnostics, and applied labs
 lesson_expansions.py       Comprehensive lesson/reference expansions
 validate_course.py         Static course and security validation
 ```

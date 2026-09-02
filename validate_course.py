@@ -39,6 +39,7 @@ for path in paths:
     ids: set[str] = set()
     markdown_words = 0
     lesson_code_cells = 0
+    lesson_headings = 0
     for index, cell in enumerate(notebook.get("cells", []), 1):
         cell_id = cell.get("id")
         if not cell_id or cell_id in ids:
@@ -57,13 +58,16 @@ for path in paths:
                 errors.append(f"{path}: cell {index} syntax error: {exc}")
         elif cell.get("cell_type") == "markdown":
             markdown_words += len(re.findall(r"\b[\w'-]+\b", cell.get("source", "")))
+            lesson_headings += len(re.findall(r"^##+ ", cell.get("source", ""), flags=re.MULTILINE))
 
-    if markdown_words < 700:
-        errors.append(f"{path}: lesson depth regression ({markdown_words} markdown words; minimum 700)")
-    if lesson_code_cells < 3:
-        errors.append(f"{path}: needs at least 3 non-setup code examples")
-    if len(notebook.get("cells", [])) < 12:
-        errors.append(f"{path}: needs at least 12 lesson/setup cells")
+    if markdown_words < 840:
+        errors.append(f"{path}: lesson depth regression ({markdown_words} markdown words; minimum 840)")
+    if lesson_code_cells < 5:
+        errors.append(f"{path}: needs at least 5 non-setup code examples")
+    if lesson_headings < 7:
+        errors.append(f"{path}: needs at least 7 substantive lesson headings")
+    if len(notebook.get("cells", [])) < 16:
+        errors.append(f"{path}: needs at least 16 lesson/setup cells")
 
     serialized = json.dumps(notebook).lower()
     for forbidden in ("import anthropic", "from openai import", "openai_api_key", "anthropic_api_key"):
@@ -82,4 +86,4 @@ if errors:
         print(" -", error)
     raise SystemExit(1)
 
-print(f"Validated {len(paths)} comprehensive notebooks; depth, Colab setup, JSON, cell syntax, outputs, and provider scan passed.")
+print(f"Validated {len(paths)} comprehensive notebooks; rigorous depth, examples, structure, Colab setup, JSON, cell syntax, outputs, and provider scan passed.")
