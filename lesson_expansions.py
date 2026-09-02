@@ -2077,7 +2077,37 @@ lesson(24,
 
 lesson(25,
     ("md", r"""
-    ## 25.5 vLLM engine mental model
+    ## 25.7 Ollama deployment decision record
+
+    Before adopting an engine, write down the workload and constraint that selected it. Ollama is a
+    strong default for a developer workstation, an offline demonstration, or a single-user application
+    where operational simplicity matters more than accelerator-wide throughput. Revisit that decision
+    when concurrency, latency objectives, model size, multimodal requirements, tenant isolation, adapter
+    density, or observability needs change. Migration is easiest when prompts use correct chat templates,
+    business logic is outside the engine, and a narrow internal client contract is backed by conformance
+    tests against every supported server.
+
+    Keep an inventory of downloaded models, digests, provenance, license, size, quantization, owners, and
+    last use. Local weights consume material disk and may have redistribution restrictions. Updating the
+    Ollama application or a mutable model tag is a release: stage it, rerun frozen quality and performance
+    tests, and retain a rollback path. Data locality is a valuable property, but only a documented threat
+    model can establish which processes, users, plugins, tools, logs, and network destinations can still
+    observe a request.
+    """),
+    ("code", r'''
+    engine_decision = {
+        "Ollama": "local simplicity, privacy-sensitive prototypes, modest concurrency",
+        "vLLM": "high-throughput accelerator serving and continuous batching",
+        "Transformers": "research control, architecture debugging, direct Python integration",
+        "managed endpoint": "outsourced infrastructure lifecycle and scaling",
+    }
+    for engine, fit in engine_decision.items(): print(f"{engine:16} | {fit}")
+    ''') ,
+)
+
+lesson(26,
+    ("md", r"""
+    ## 26.5 vLLM engine mental model
 
     Requests pass through an API frontend/tokenizer into an engine scheduler. Prefill computes prompt
     states; decode advances active sequences token by token. A block manager allocates logical KV-cache
@@ -2104,7 +2134,7 @@ lesson(25,
     print("cached_tokens is total across concurrent sequences, not max context alone.")
     '''),
     ("md", r"""
-    ## 25.6 Server configuration and compatibility
+    ## 26.6 Server configuration and compatibility
 
     Important controls include served model name/revision, tokenizer/chat template, dtype,
     quantization, maximum model length, GPU memory utilization, maximum batched tokens/sequences,
@@ -2132,7 +2162,7 @@ lesson(25,
     print(" ".join(command))
     '''),
     ("md", r"""
-    ## 25.7 Parallelism, replicas, and topology
+    ## 26.7 Parallelism, replicas, and topology
 
     Tensor parallelism shards layer matrices and introduces frequent collectives; keep it within a
     fast-connected node when possible. Pipeline parallelism splits layers/stages but can introduce
@@ -2159,7 +2189,7 @@ lesson(25,
               "headroom_ok" if utilization < .7 else "queue risk")
     '''),
     ("md", r"""
-    ## 25.8 Benchmark methodology and optimization
+    ## 26.8 Benchmark methodology and optimization
 
     Separate offline throughput from online latency benchmarks. Use representative prompt/output
     length distributions and arrival patterns. Warm up. Report TTFT, inter-token latency, end-to-end
@@ -2174,7 +2204,7 @@ lesson(25,
     selection can have shape-dependent tradeoffs. Record power/cost if economics matter.
     """),
     ("md", r"""
-    ## 25.9 Production and security reference
+    ## 26.9 Production and security reference
 
     Put the server behind authenticated TLS ingress with per-tenant rate/token/request-size limits.
     Bind admin/dev endpoints privately. Do not use a shared example API key. Control model/tokenizer
@@ -2655,7 +2685,29 @@ run long enough for queues/autoscaling. Capacity conclusions are invalid without
 quality/length controls.
 """,
 25: r"""
-## 25.10 vLLM operations reference
+## 25.8 Ollama operations reference
+
+| Concern | Minimum practice |
+|---|---|
+| Reproducibility | Pin/record model digest, tag, quantization, Modelfile, Ollama version |
+| API | Test a narrow native or compatible endpoint contract |
+| Capacity | Measure cold load, prefill, decode, concurrency, memory, and context lengths |
+| Structure | Constrain with schema, then validate semantics and business rules |
+| Embeddings | Pin model/dimension/preprocessing; reject unexpected truncation |
+| Security | Loopback by default; gateway auth/TLS/limits for intentional exposure |
+| Lifecycle | Inventory models; stage updates; retain rollback and deletion policy |
+
+Useful commands include `ollama pull`, `ollama list`, `ollama ps`, `ollama show`, `ollama run`, and
+`ollama create`. Run lifecycle mutations deliberately in a terminal, not as hidden notebook side
+effects. A Modelfile captures a base, parameters, template, system behavior, adapters, and license, but
+does not replace an application configuration or model card.
+
+Treat generated JSON, tool calls, paths, and URLs as untrusted. Bound request and response tokens,
+timeouts, queues, concurrency, and tool effects. Redact sensitive telemetry and test behavior after any
+model, template, quantization, server, or hardware change.
+""",
+26: r"""
+## 26.10 vLLM operations reference
 
 | Question | Evidence to collect |
 |---|---|
@@ -2676,5 +2728,5 @@ queue time, prefix hit rate, aborts/errors, and GPU health—not GPU utilization
 """,
 })
 
-for _number in range(15, 26):
+for _number in range(15, 27):
     EXPANSIONS[_number].append(("md", REFERENCE_APPENDICES[_number]))

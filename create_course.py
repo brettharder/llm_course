@@ -27,7 +27,8 @@ COLAB_PACKAGES = {
     19: ["mcp>=1.6"],
     21: ["huggingface-hub>=0.30,<1", "python-dotenv>=1.1"],
     23: ["huggingface-hub>=0.30,<1", "python-dotenv>=1.1", "pillow>=10"],
-    25: ["httpx>=0.28"],
+    25: ["httpx>=0.28", "pydantic>=2.11"],
+    26: ["httpx>=0.28"],
 }
 
 
@@ -2010,13 +2011,211 @@ add("08_production/24_reliability_observability.ipynb", "Reliability, Observabil
     "Design a privacy-preserving trace sampling and retention policy.",
 ])
 
-add("08_production/25_vllm_serving.ipynb", "Serving Open Models with vLLM", [
+add("08_production/25_ollama_local_serving.ipynb", "Local Model Serving with Ollama", [
+    "Choose Ollama for local, private, low-operations inference and distinguish it from vLLM",
+    "Package a model with a Modelfile and use native and OpenAI-compatible HTTP APIs",
+    "Implement structured output, embeddings, streaming, benchmarking, and production safeguards",
+], [
+    md(r"""
+    ## 25.1 Where Ollama fits
+
+    Ollama packages model acquisition, quantized local inference, prompt templates, and an HTTP server
+    behind a small developer interface. It is especially useful for laptops, workstations, offline or
+    privacy-sensitive prototypes, classroom exercises, and applications that need a dependable local
+    endpoint without operating a GPU-serving cluster. It supports macOS, Linux, and Windows and can use
+    available CPU/GPU acceleration.
+
+    That convenience does not make every laptop a production cluster. Ollama is generally optimized for
+    local usability and modest concurrency; vLLM emphasizes continuous batching, high-throughput GPU
+    serving, parallelism, and fleet operations. Treat the OpenAI-compatible protocol as a portability
+    seam, not evidence that engines have identical endpoints, parameters, performance, or semantics.
+    Benchmark the exact model, quantization, context length, hardware, concurrency, and API path.
+
+    This notebook does not install or start a system daemon from Python. Install Ollama using its official
+    platform instructions, then start the application/service and pull a model explicitly. Colab is a poor
+    default for this lesson because its notebook process and service lifecycle are ephemeral; use your
+    local machine or a controlled VM. All HTTP cells fail safely when no local server is present.
+    """),
+    code(r'''
+    import json, os, time, statistics, httpx
+
+    OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
+    OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "qwen3:0.6b")
+    def server_status():
+        try:
+            response = httpx.get(f"{OLLAMA_BASE_URL}/api/tags", timeout=2)
+            response.raise_for_status()
+            return {"ready": True, "models": [m["name"] for m in response.json().get("models", [])]}
+        except Exception as exc:
+            return {"ready": False, "reason": f"{type(exc).__name__}: {exc}"}
+    status = server_status()
+    print(status)
+    print(f"If needed, run in a terminal: ollama pull {OLLAMA_MODEL}")
+    ''') ,
+    md(r"""
+    ## 25.2 Model lifecycle and reproducibility
+
+    Model names include tags, and tags may move. Record the resolved model metadata and digest with your
+    application release. Pulling weights is a material network/storage operation, so it remains an explicit
+    terminal step. `ollama list` shows local models, `ollama ps` shows loaded models, `ollama show` inspects
+    metadata, and `ollama rm` deletes a local model. Never automate deletion in a teaching notebook.
+
+    A `Modelfile` is a model blueprint. `FROM` selects the base model or local GGUF/Safetensors source;
+    `PARAMETER` defines defaults such as context length and temperature; `SYSTEM` supplies behavior;
+    `TEMPLATE` controls serialization; `ADAPTER` can attach a compatible LoRA; and `LICENSE` records terms.
+    A system prompt changes default behavior but is not an authorization or security boundary. Template
+    compatibility is model-specific—an incorrect chat template can severely reduce quality.
+    """),
+    code(r'''
+    modelfile = (f"FROM {OLLAMA_MODEL}\n"
+                 "PARAMETER temperature 0\n"
+                 "PARAMETER num_ctx 4096\n"
+                 "PARAMETER num_predict 256\n"
+                 "SYSTEM You are a concise course assistant. State uncertainty and never invent citations.\n")
+    print(modelfile)
+    print("Save as Modelfile, then run: ollama create llm-course-assistant -f Modelfile")
+    ''') ,
+    code(r'''
+    def native_chat(messages, model=OLLAMA_MODEL, **options):
+        payload = {"model": model, "messages": messages, "stream": False,
+                   "options": {"temperature": 0, **options}}
+        response = httpx.post(f"{OLLAMA_BASE_URL}/api/chat", json=payload, timeout=120)
+        response.raise_for_status()
+        return response.json()
+
+    if status["ready"] and any(name.startswith(OLLAMA_MODEL.split(":")[0]) for name in status["models"]):
+        result = native_chat([{"role": "user", "content": "Explain KV caching in two sentences."}])
+        print(result["message"]["content"])
+        print({key: result.get(key) for key in
+               ["prompt_eval_count", "eval_count", "total_duration", "load_duration"]})
+    else:
+        print("Skipped: start Ollama and pull the configured model first.")
+    ''') ,
+    md(r"""
+    ## 25.3 Streaming and portable clients
+
+    The native API can stream newline-delimited JSON chunks. A robust client uses incremental parsing,
+    handles timeouts and disconnects, distinguishes transport failure from model refusal, and records usage
+    metadata without logging sensitive prompts. Backpressure still matters locally: an unbounded request
+    queue can exhaust memory or make interactive latency unusable.
+
+    Ollama also implements portions of OpenAI-compatible APIs. Calling `/v1/chat/completions` directly with
+    ordinary HTTP keeps this open-model course provider-neutral. Compatibility allows an application adapter
+    to switch between Ollama and vLLM, but the adapter should expose only the tested common subset and should
+    validate responses. Engine-specific capabilities belong behind explicit feature flags.
+    """),
+    code(r'''
+    def compatible_chat(prompt, model=OLLAMA_MODEL):
+        payload = {"model": model, "messages": [{"role": "user", "content": prompt}],
+                   "temperature": 0, "stream": False}
+        response = httpx.post(f"{OLLAMA_BASE_URL}/v1/chat/completions", json=payload, timeout=120)
+        response.raise_for_status()
+        body = response.json()
+        return body["choices"][0]["message"]["content"], body.get("usage", {})
+
+    if status["ready"] and status["models"]:
+        text, usage = compatible_chat("Why should a model server bind to localhost by default?")
+        print(text, usage)
+    else:
+        print("Portable API example skipped; server/model unavailable.")
+    ''') ,
+    md(r"""
+    ## 25.4 Structured output is constrained generation plus validation
+
+    The native chat API accepts JSON or a JSON Schema in `format`; the compatible API exposes structured
+    response formats where supported. Constraining decoding reduces malformed syntax, but a schema cannot
+    guarantee that values are factually correct or safe. Validate types and business rules after decoding,
+    reject unexpected fields, cap sizes, and treat model-produced paths, URLs, identifiers, and tool arguments
+    as untrusted input. Temperature zero improves repeatability but is not a cross-version determinism promise.
+    """),
+    code(r'''
+    from pydantic import BaseModel, Field, ValidationError
+    class Concept(BaseModel):
+        term: str
+        definition: str
+        confidence: float = Field(ge=0, le=1)
+
+    if status["ready"] and status["models"]:
+        payload = {"model": OLLAMA_MODEL, "stream": False, "format": Concept.model_json_schema(),
+                   "messages": [{"role": "user", "content": "Define gradient accumulation."}],
+                   "options": {"temperature": 0}}
+        raw = httpx.post(f"{OLLAMA_BASE_URL}/api/chat", json=payload, timeout=120).json()
+        try: print(Concept.model_validate_json(raw["message"]["content"]))
+        except ValidationError as exc: print("Reject invalid model output:", exc)
+    else:
+        print("Structured-output example skipped; schema construction still ran.")
+    ''') ,
+    md(r"""
+    ## 25.5 Local embeddings and RAG
+
+    `/api/embed` accepts one string or a list and returns vectors. Use a model intended for embeddings;
+    generation-model hidden states are not automatically good retrieval vectors. Pin the embedding model and
+    preprocessing because changing either invalidates comparisons with previously indexed vectors. Confirm
+    vector dimension, normalize consistently, batch inputs, and decide whether oversize inputs should error
+    rather than silently truncate. The retrieval lessons' chunking, metadata, and evaluation rules still apply.
+    """),
+    code(r'''
+    EMBEDDING_MODEL = os.getenv("OLLAMA_EMBEDDING_MODEL", "embeddinggemma")
+    def embed(texts):
+        response = httpx.post(f"{OLLAMA_BASE_URL}/api/embed",
+                              json={"model": EMBEDDING_MODEL, "input": texts, "truncate": False}, timeout=120)
+        response.raise_for_status(); return response.json()["embeddings"]
+    if status["ready"] and any(name.startswith(EMBEDDING_MODEL) for name in status["models"]):
+        vectors = embed(["causal attention", "future tokens are masked"])
+        print("count:", len(vectors), "dimension:", len(vectors[0]))
+    else:
+        print(f"Skipped. Optional setup: ollama pull {EMBEDDING_MODEL}")
+    ''') ,
+    md(r"""
+    ## 25.6 Benchmark and operate the service you actually have
+
+    Separate cold-load time, time to first token, prompt evaluation rate, generation rate, end-to-end latency,
+    and concurrency. Ollama responses expose nanosecond duration and token-count fields; convert units and avoid
+    mixing prefill with decode throughput. Run warmups, use realistic prompt/output lengths, report quantization
+    and resident memory, and include p50/p95/p99 rather than averages alone. Compare quality before declaring a
+    smaller quantization “faster.” Notebook 24 supplies a more complete load-test discipline.
+
+    Bind to loopback unless remote access is intentional. If exposed, place authentication, TLS, rate limits,
+    request-size limits, tenant isolation, and audit controls in a trusted reverse proxy or application layer.
+    Model prompts cannot enforce permissions. Review model and adapter licenses; protect the local model store;
+    pin dependencies and digests; cap context/output/concurrency; redact telemetry; and establish update and
+    rollback procedures. A local model improves data locality only if prompts, logs, tools, and backups also stay
+    within the intended trust boundary.
+    """),
+    code(r'''
+    # Sequential latency harness: expand to bounded concurrency only after this baseline is stable.
+    def benchmark(prompts):
+        samples = []
+        for prompt in prompts:
+            started = time.perf_counter()
+            result = native_chat([{"role": "user", "content": prompt}], num_predict=64)
+            elapsed = time.perf_counter() - started
+            tokens = result.get("eval_count", 0)
+            samples.append({"seconds": elapsed, "tokens": tokens,
+                            "tokens_per_second": tokens / elapsed if elapsed else 0})
+        return samples
+    if status["ready"] and status["models"]:
+        measurements = benchmark(["Define perplexity.", "What is RoPE?", "Explain a KV cache."])
+        latencies = [m["seconds"] for m in measurements]
+        print(measurements)
+        print("median seconds:", statistics.median(latencies), "max seconds:", max(latencies))
+    else:
+        print("Benchmark skipped; server/model unavailable.")
+    ''') ,
+], [
+    "Create a pinned Modelfile and record the resolved base-model digest and license.",
+    "Benchmark cold and warm runs at three context lengths; report prefill and decode separately.",
+    "Build one client adapter that targets both Ollama and vLLM, then document the tested API subset.",
+    "Threat-model exposing Ollama beyond localhost and design the required gateway controls.",
+])
+
+add("08_production/26_vllm_serving.ipynb", "Serving Open Models with vLLM", [
     "Launch and call an OpenAI-compatible vLLM server",
     "Relate continuous batching and paged KV management to throughput",
     "Plan capacity, parallelism, structured output, monitoring, and secure deployment",
 ], [
     md(r"""
-    ## 25.1 Serving changes the optimization target
+    ## 26.1 Serving changes the optimization target
 
     Local `generate()` is useful for experiments. A server must schedule concurrent requests,
     manage variable KV-cache allocations, stream, reject overload, expose health/metrics, and
@@ -2024,7 +2223,7 @@ add("08_production/25_vllm_serving.ipynb", "Serving Open Models with vLLM", [
     admits new sequences as others finish; block-based KV management reduces fragmentation.
     """),
     md(r"""
-    ## 25.2 Start on a supported accelerator host
+    ## 26.2 Start on a supported accelerator host
 
     Install vLLM according to the current accelerator-specific instructions, then run:
 
@@ -2055,7 +2254,7 @@ add("08_production/25_vllm_serving.ipynb", "Serving Open Models with vLLM", [
         print("Start the vLLM server, then rerun:", type(exc).__name__)
     '''),
     md(r"""
-    ## 25.3 Structured output and APIs
+    ## 26.3 Structured output and APIs
 
     Current vLLM releases support OpenAI-compatible chat/completions plus health, model, and
     Prometheus metrics endpoints. Structured constraints are passed in the current
@@ -2070,7 +2269,7 @@ add("08_production/25_vllm_serving.ipynb", "Serving Open Models with vLLM", [
     print(payload_extension)
     '''),
     md(r"""
-    ## 25.4 Scale only after measuring
+    ## 26.4 Scale only after measuring
 
     Tensor parallelism shards a model across GPUs; data parallelism replicates it for more
     traffic; pipeline/expert parallelism address other model/topology constraints. Communication

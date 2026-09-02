@@ -1,6 +1,6 @@
 # Rigorous LLM Engineering — Hugging Face First
 
-[![Course validation](https://img.shields.io/badge/notebooks-25%20validated-2ea44f)](#validation)
+[![Course validation](https://img.shields.io/badge/notebooks-26%20validated-2ea44f)](#validation)
 [![Hugging Face](https://img.shields.io/badge/ecosystem-Hugging%20Face-FFD21E)](https://huggingface.co/)
 [![Google Colab](https://img.shields.io/badge/runtime-Google%20Colab-F9AB00)](COLAB.md)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12%2B-3776AB)](pyproject.toml)
@@ -34,7 +34,7 @@ standalone references.
 | 5. Agents and MCP | Tool calling and agent loops · Building an MCP server |
 | 6. Evaluation and security | Evaluation fundamentals · LLM as a judge · LLM application security |
 | 7. Multimodal | Vision-language models and document understanding |
-| 8. Production | Reliability, observability, and load testing · Serving open models with vLLM |
+| 8. Production | Reliability, observability, and load testing · Local serving with Ollama · High-throughput serving with vLLM |
 
 ## Notebook index
 
@@ -66,7 +66,8 @@ Every notebook can be opened directly in Google Colab after the repository is pu
 | 22 | LLM application security | [Notebook](06_evaluation_security/22_llm_application_security.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/06_evaluation_security/22_llm_application_security.ipynb) |
 | 23 | Vision-language models and document understanding | [Notebook](07_multimodal/23_vision_language_models.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/07_multimodal/23_vision_language_models.ipynb) |
 | 24 | Reliability, observability, and load testing | [Notebook](08_production/24_reliability_observability.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/08_production/24_reliability_observability.ipynb) |
-| 25 | Serving open models with vLLM | [Notebook](08_production/25_vllm_serving.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/08_production/25_vllm_serving.ipynb) |
+| 25 | Local model serving with Ollama | [Notebook](08_production/25_ollama_local_serving.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/08_production/25_ollama_local_serving.ipynb) |
+| 26 | Serving open models with vLLM | [Notebook](08_production/26_vllm_serving.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/08_production/26_vllm_serving.ipynb) |
 
 ## Quick start
 
@@ -130,7 +131,7 @@ lesson depth so later edits do not accidentally collapse notebooks back into sho
 05_agents_mcp/             Tool agents and MCP
 06_evaluation_security/    Evaluation, judging, and security
 07_multimodal/             Vision-language systems
-08_production/             Reliability and vLLM serving
+08_production/             Reliability, Ollama local serving, and vLLM at scale
 create_course.py           Notebook generator and core lessons
 lesson_expansions.py       Comprehensive lesson/reference expansions
 validate_course.py         Static course and security validation
