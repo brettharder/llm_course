@@ -140,10 +140,10 @@ def add(path: str, title: str, objectives: list[str], cells: list[dict], exercis
 
 
 # ---------------------------------------------------------------------------
-# Module 1 — Mathematical foundations
+# Module 1 — LLM foundations
 # ---------------------------------------------------------------------------
 
-add("01_math_foundations/04_tokens_and_causal_lm.ipynb", "Tokens and Causal Language Modeling", [
+add("01_llm_foundations/04_tokens_and_causal_lm.ipynb", "Tokens and Causal Language Modeling", [
     "Distinguish bytes, characters, words, and subword tokens",
     "Construct shifted labels for next-token prediction",
     "Relate context length, vocabulary size, logits, and generation",
@@ -212,7 +212,7 @@ add("01_math_foundations/04_tokens_and_causal_lm.ipynb", "Tokens and Causal Lang
     "Explain why changing a tokenizer can invalidate pretrained embedding weights.",
 ])
 
-add("01_math_foundations/05_probability_loss_gradients.ipynb", "Probability, Cross-Entropy, and Gradients", [
+add("01_llm_foundations/05_probability_loss_gradients.ipynb", "Probability, Cross-Entropy, and Gradients", [
     "Compute stable softmax and negative log-likelihood",
     "Derive the gradient of cross-entropy with respect to logits",
     "Connect perplexity, calibration, and optimization",
@@ -277,7 +277,7 @@ add("01_math_foundations/05_probability_loss_gradients.ipynb", "Probability, Cro
     "Construct two tokenizers for which identical text produces incomparable perplexities.",
 ])
 
-add("01_math_foundations/07_decoder_transformer.ipynb", "A Decoder Transformer from Scratch", [
+add("01_llm_foundations/07_decoder_transformer.ipynb", "A Decoder Transformer from Scratch", [
     "Track tensor shapes through embeddings, attention, MLP, residuals, and LM head",
     "Implement causal self-attention and a pre-norm decoder block",
     "Calculate the dominant parameter and compute terms",
@@ -363,7 +363,7 @@ add("01_math_foundations/07_decoder_transformer.ipynb", "A Decoder Transformer f
     "Estimate parameters for a 24-layer, width-2048 decoder with 4× MLP expansion.",
 ])
 
-add("01_math_foundations/08_position_encodings_rope.ipynb", "Position Encodings and RoPE", [
+add("01_llm_foundations/08_position_encodings_rope.ipynb", "Position Encodings and RoPE", [
     "Explain why attention alone is permutation equivariant",
     "Compare learned, sinusoidal, relative, ALiBi, and rotary position methods",
     "Implement RoPE and reason about context extension",
@@ -424,7 +424,7 @@ add("01_math_foundations/08_position_encodings_rope.ipynb", "Position Encodings 
     "Design a needle-in-a-haystack test that cannot be passed using lexical shortcuts.",
 ])
 
-add("01_math_foundations/09_efficient_attention.ipynb", "MHA, MQA, GQA, FlashAttention, and KV Caches", [
+add("01_llm_foundations/09_efficient_attention.ipynb", "MHA, MQA, GQA, FlashAttention, and KV Caches", [
     "Compare multi-head, multi-query, and grouped-query attention",
     "Separate exact attention algorithms from approximation",
     "Estimate KV-cache memory and understand FlashAttention's IO benefit",
@@ -489,13 +489,13 @@ add("01_math_foundations/09_efficient_attention.ipynb", "MHA, MQA, GQA, FlashAtt
 # Module 2 — Training
 # ---------------------------------------------------------------------------
 
-add("01_math_foundations/10_mixture_of_experts.ipynb", "Mixture-of-Experts Transformers from First Principles", [
+add("01_llm_foundations/10_mixture_of_experts.ipynb", "Mixture-of-Experts Transformers from First Principles", [
     "Derive sparse MoE routing, expert aggregation, and parameter-versus-compute scaling",
     "Implement top-k routing with capacity and auxiliary load-balancing losses",
     "Explain expert parallelism, communication costs, collapse, and production diagnostics",
 ], [
     md(r"""
-    ## 13.1 Sparse capacity
+    ## 10.1 Sparse capacity
 
     A dense feed-forward layer applies the same parameters to every token. A sparse
     mixture-of-experts (MoE) layer owns several feed-forward networks but routes each token to only
@@ -524,7 +524,7 @@ add("01_math_foundations/10_mixture_of_experts.ipynb", "Mixture-of-Experts Trans
     print("selected weights sum:", weights.sum(-1)[:5])
     ''') ,
     md(r"""
-    ## 13.2 Dispatch, combine, and capacity
+    ## 10.2 Dispatch, combine, and capacity
 
     An implementation groups tokens by selected expert, runs expert matrix multiplications, weights
     the results, and scatters them back to original order. A naïve Python loop is readable; optimized
@@ -553,7 +553,7 @@ add("01_math_foundations/10_mixture_of_experts.ipynb", "Mixture-of-Experts Trans
     print(combined.shape, "finite:", torch.isfinite(combined).all().item())
     ''') ,
     md(r"""
-    ## 13.3 Why routing needs regularization
+    ## 10.3 Why routing needs regularization
 
     Task loss alone can collapse traffic onto a few initially favored experts. A load-balancing
     objective encourages agreement between the fraction of tokens assigned to each expert and mean
@@ -578,7 +578,7 @@ add("01_math_foundations/10_mixture_of_experts.ipynb", "Mixture-of-Experts Trans
            "z_loss": z_loss.item(), "entropy": entropy.item()})
     ''') ,
     md(r"""
-    ## 13.4 Expert parallelism and inference
+    ## 10.4 Expert parallelism and inference
 
     Data parallelism replicates experts; expert parallelism shards them. Tensor, pipeline, and expert
     parallelism can be combined, but every axis introduces placement and collective-communication
@@ -600,7 +600,7 @@ add("01_math_foundations/10_mixture_of_experts.ipynb", "Mixture-of-Experts Trans
     for e, k in [(8, 2), (64, 2), (128, 4)]: print(e, k, moe_accounting(4096, 14336, e, k))
     ''') ,
     md(r"""
-    ## 13.5 Evaluation and design choices
+    ## 10.5 Evaluation and design choices
 
     Compare an MoE model with a dense baseline under matched training tokens and either matched active
     compute or matched wall-clock budget. Evaluate quality, throughput, memory, communication, and
@@ -678,7 +678,7 @@ add("02_training/14_synthetic_data_pipelines.ipynb", "Synthetic Data Pipelines f
     "Build a reproducible synthetic instruction-data pipeline with explicit quality gates",
 ], [
     md(r"""
-    ## 16.1 Synthetic data is a pipeline, not a prompt
+    ## 14.1 Synthetic data is a pipeline, not a prompt
 
     Synthetic examples can expand coverage, translate formats, generate edge cases, distill a stronger
     teacher, or create problems with mechanically verifiable answers. They do not create information for
@@ -704,7 +704,7 @@ add("02_training/14_synthetic_data_pipelines.ipynb", "Synthetic Data Pipelines f
     print(fingerprint(example), asdict(example))
     ''') ,
     md(r"""
-    ## 16.2 Seed distribution and generation
+    ## 14.2 Seed distribution and generation
 
     Start from an explicit capability taxonomy and sample seeds to cover it. Uniform task counts rarely
     mean uniform difficulty, language, or token volume. Stratify by domain, skill, difficulty, format,
@@ -729,7 +729,7 @@ add("02_training/14_synthetic_data_pipelines.ipynb", "Synthetic Data Pipelines f
     print(generation_plan)
     ''') ,
     md(r"""
-    ## 16.3 Verification beats self-confidence
+    ## 14.3 Verification beats self-confidence
 
     Prefer independent, deterministic validators: execute tests in a sandbox, compare normalized exact
     answers, validate JSON Schema, type-check programs, recompute arithmetic, confirm citations against
@@ -755,7 +755,7 @@ add("02_training/14_synthetic_data_pipelines.ipynb", "Synthetic Data Pipelines f
     print([asdict(verify_integer(row, 391)) for row in rows])
     ''') ,
     md(r"""
-    ## 16.4 Deduplication, leakage, and diversity
+    ## 14.4 Deduplication, leakage, and diversity
 
     Exact hashes catch identical normalized text. Near-duplicate detection may use n-gram MinHash,
     locality-sensitive hashing, embeddings, syntax trees, or task-specific canonicalization. Deduplicate
@@ -777,7 +777,7 @@ add("02_training/14_synthetic_data_pipelines.ipynb", "Synthetic Data Pipelines f
     print(groups)
     ''') ,
     md(r"""
-    ## 16.5 Mixtures, experiments, and release
+    ## 14.5 Mixtures, experiments, and release
 
     Synthetic data should earn its place through ablation. Train matched runs with human-only data, each
     synthetic source, and mixtures while holding tokens or compute constant. Evaluate target gains,
@@ -1495,7 +1495,7 @@ add("02_training/22_reasoning_grpo_verifiable_rewards.ipynb", "Reasoning Post-Tr
     "Configure a guarded Hugging Face TRL reasoning run and evaluate quality against inference cost",
 ], [
     md(r"""
-    ## 28.1 From imitation to exploration
+    ## 22.1 From imitation to exploration
 
     SFT increases likelihood of demonstrations; DPO learns from fixed chosen/rejected pairs. Online RL
     samples completions from the current policy, scores them, and changes the policy toward high-reward
@@ -1518,7 +1518,7 @@ add("02_training/22_reasoning_grpo_verifiable_rewards.ipynb", "Reasoning Post-Tr
     print("zero-variance group carries no ranking information")
     ''') ,
     md(r"""
-    ## 28.2 Verifiers and reward contracts
+    ## 22.2 Verifiers and reward contracts
 
     Math answers, compiled code, unit tests, games, and formal constraints permit outcome rewards. Parse a
     clearly delimited final answer, normalize only equivalences you truly accept, and keep the checker
@@ -1545,7 +1545,7 @@ add("02_training/22_reasoning_grpo_verifiable_rewards.ipynb", "Reasoning Post-Tr
     print(exact_math_reward(probes, ["391", "391"]))
     ''') ,
     md(r"""
-    ## 28.3 Policy objective and stability
+    ## 22.3 Policy objective and stability
 
     For sampled token actions, a policy-gradient surrogate multiplies log-probability ratios by advantages.
     Clipping prevents one batch from making arbitrarily large changes. A KL penalty against a reference
@@ -1567,7 +1567,7 @@ add("02_training/22_reasoning_grpo_verifiable_rewards.ipynb", "Reasoning Post-Tr
     print({"ratio": ratio.tolist(), "clipped_objective": surrogate.mean().item()})
     ''') ,
     md(r"""
-    ## 28.4 A guarded TRL configuration
+    ## 22.4 A guarded TRL configuration
 
     TRL's `GRPOTrainer` accepts standard or conversational prompts and one or more reward functions. Extra
     dataset columns are forwarded to custom rewards. Current TRL also supports tools and stateful environment
@@ -1594,7 +1594,7 @@ add("02_training/22_reasoning_grpo_verifiable_rewards.ipynb", "Reasoning Post-Tr
         print("GRPO skipped. Audit rewards, choose a GPU runtime, then opt in.")
     ''') ,
     md(r"""
-    ## 28.5 Reasoning evaluation and inference-time compute
+    ## 22.5 Reasoning evaluation and inference-time compute
 
     Do not grade exposed reasoning prose as if it were faithful cognition. Score final outcomes, robustness
     to irrelevant details and representation changes, calibration, safety, and resource use. Report pass@1
@@ -1921,7 +1921,7 @@ add("04_retrieval/31_advanced_rag.ipynb", "Advanced RAG: Hybrid Retrieval, Reran
     "Evaluate retrieval, answers, citations, latency, and adversarial robustness component by component",
 ], [
     md(r"""
-    ## 39.1 Why advanced RAG is a retrieval system, not a longer prompt
+    ## 31.1 Why advanced RAG is a retrieval system, not a longer prompt
 
     Dense retrieval captures semantic similarity but can miss identifiers, rare names, error codes, and exact
     phrases. Lexical retrieval excels at exact overlap but misses paraphrase. Advanced RAG combines independent
@@ -1945,7 +1945,7 @@ add("04_retrieval/31_advanced_rag.ipynb", "Advanced RAG: Hybrid Retrieval, Reran
     print(query, documents)
     ''') ,
     md(r"""
-    ## 39.2 Hybrid candidate generation and reciprocal-rank fusion
+    ## 31.2 Hybrid candidate generation and reciprocal-rank fusion
 
     BM25 scores term matches with document-frequency and length normalization. Dense bi-encoders embed queries
     and chunks independently for efficient vector search. Retrieve a wider candidate set from each, then fuse
@@ -1983,7 +1983,7 @@ add("04_retrieval/31_advanced_rag.ipynb", "Advanced RAG: Hybrid Retrieval, Reran
     print("lexical:", lexical_order, "dense:", dense_order, "fused:", fused)
     ''') ,
     md(r"""
-    ## 39.3 Reranking and diversity
+    ## 31.3 Reranking and diversity
 
     A cross-encoder jointly reads query and candidate, usually improving precision at higher latency than a
     bi-encoder. Rerank only a bounded candidate pool and batch by token length. Generative rerankers can provide
@@ -2008,7 +2008,7 @@ add("04_retrieval/31_advanced_rag.ipynb", "Advanced RAG: Hybrid Retrieval, Reran
     print("diverse selection:", maximal_marginal_relevance(relevance, similarity))
     ''') ,
     md(r"""
-    ## 39.4 Query transformation and routing
+    ## 31.4 Query transformation and routing
 
     Conversation questions may require history-aware rewriting, but a rewrite can erase constraints or introduce
     facts. Preserve the original query and evaluate rewritten retrieval independently. Multi-query retrieval
@@ -2027,7 +2027,7 @@ add("04_retrieval/31_advanced_rag.ipynb", "Advanced RAG: Hybrid Retrieval, Reran
     print(deterministic_queries(query))
     ''') ,
     md(r"""
-    ## 39.5 Contextual compression and grounded answers
+    ## 31.5 Contextual compression and grounded answers
 
     Contextual compression extracts query-relevant spans from retrieved chunks, reducing distraction and token
     cost. Extraction can remove qualifications, so preserve source offsets and expand enough neighborhood for
@@ -2051,7 +2051,7 @@ add("04_retrieval/31_advanced_rag.ipynb", "Advanced RAG: Hybrid Retrieval, Reran
     print(context)
     ''') ,
     md(r"""
-    ## 39.6 Evaluation matrix
+    ## 31.6 Evaluation matrix
 
     Retrieval metrics require relevance judgments: Recall@k asks whether necessary evidence was retrieved; MRR
     rewards early first relevance; nDCG supports graded relevance; precision measures distractors. Multi-hop tasks
@@ -3855,6 +3855,8 @@ def write_course() -> None:
     register(add, md, code)
     from course_deepening import register as register_deepening
     register_deepening(LESSONS, md, code)
+    from course_references import register as register_references
+    register_references(LESSONS, md)
     LESSONS.sort(key=lambda item: int(Path(item[0]).stem.split("_", 1)[0]))
     for path, title, cells in LESSONS:
         target = ROOT / path

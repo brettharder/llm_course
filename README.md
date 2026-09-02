@@ -16,6 +16,8 @@ diagnostic checklists, a compact reference appendix, and exercises.
 The repository enforces a stronger lesson-quality floor covering explanatory depth, substantive
 sections, worked examples, Colab setup, syntax, clean outputs, and credential safety. See
 [COURSE_QUALITY.md](COURSE_QUALITY.md) for the teaching rubric and recommended study loop.
+The latest curriculum-level findings and scope decisions are documented in
+[COURSE_REVIEW.md](COURSE_REVIEW.md).
 
 ## Who this course is for
 
@@ -32,7 +34,7 @@ standalone references.
 | Module | Notebooks |
 |---|---|
 | 0. Prerequisites | NumPy for tensor algebra · PyTorch tensors, autograd, modules, data, and training · integration lab |
-| 1. Mathematical foundations | Tokens · Probability and gradients · Training a tokenizer · Decoder transformer · RoPE · Efficient attention · MoE · Scaling laws · Interpretability |
+| 1. LLM foundations | Tokens · Probability and gradients · Training a tokenizer · Decoder transformer · RoPE · Efficient attention · MoE · Scaling laws · Interpretability |
 | 2. Training | Data and synthetic pipelines · Native and HF pretraining · Post-training · Optimization/distribution · SFT/LoRA · DPO · GRPO · Distillation |
 | 3. Hugging Face inference | Hub artifacts · Prompting/context/chat templates · Inference APIs and model selection · Generation and structured output |
 | 4. Retrieval | Embeddings · Training embedders/rerankers · Baseline and advanced RAG |
@@ -50,15 +52,15 @@ Every notebook can be opened directly in Google Colab after the repository is pu
 | 1 | NumPy foundations for LLM engineering | [Notebook](00_prerequisites/01_numpy_for_llms.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/00_prerequisites/01_numpy_for_llms.ipynb) |
 | 2 | PyTorch tensors, autograd, modules, and training | [Notebook](00_prerequisites/02_pytorch_for_llms.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/00_prerequisites/02_pytorch_for_llms.ipynb) |
 | 3 | Prerequisite integration exercises | [Notebook](00_prerequisites/03_prerequisite_integration.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/00_prerequisites/03_prerequisite_integration.ipynb) |
-| 4 | Tokens and causal language modeling | [Notebook](01_math_foundations/04_tokens_and_causal_lm.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/01_math_foundations/04_tokens_and_causal_lm.ipynb) |
-| 5 | Probability, cross-entropy, and gradients | [Notebook](01_math_foundations/05_probability_loss_gradients.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/01_math_foundations/05_probability_loss_gradients.ipynb) |
-| 6 | Training and evaluating a tokenizer | [Notebook](01_math_foundations/06_train_a_tokenizer.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/01_math_foundations/06_train_a_tokenizer.ipynb) |
-| 7 | A decoder transformer from scratch | [Notebook](01_math_foundations/07_decoder_transformer.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/01_math_foundations/07_decoder_transformer.ipynb) |
-| 8 | Position encodings and RoPE | [Notebook](01_math_foundations/08_position_encodings_rope.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/01_math_foundations/08_position_encodings_rope.ipynb) |
-| 9 | Efficient attention and KV caches | [Notebook](01_math_foundations/09_efficient_attention.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/01_math_foundations/09_efficient_attention.ipynb) |
-| 10 | Mixture-of-Experts transformers | [Notebook](01_math_foundations/10_mixture_of_experts.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/01_math_foundations/10_mixture_of_experts.ipynb) |
-| 11 | Scaling laws and training-compute planning | [Notebook](01_math_foundations/11_scaling_laws_compute_planning.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/01_math_foundations/11_scaling_laws_compute_planning.ipynb) |
-| 12 | Interpretability and model debugging | [Notebook](01_math_foundations/12_interpretability_debugging.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/01_math_foundations/12_interpretability_debugging.ipynb) |
+| 4 | Tokens and causal language modeling | [Notebook](01_llm_foundations/04_tokens_and_causal_lm.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/01_llm_foundations/04_tokens_and_causal_lm.ipynb) |
+| 5 | Probability, cross-entropy, and gradients | [Notebook](01_llm_foundations/05_probability_loss_gradients.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/01_llm_foundations/05_probability_loss_gradients.ipynb) |
+| 6 | Training and evaluating a tokenizer | [Notebook](01_llm_foundations/06_train_a_tokenizer.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/01_llm_foundations/06_train_a_tokenizer.ipynb) |
+| 7 | A decoder transformer from scratch | [Notebook](01_llm_foundations/07_decoder_transformer.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/01_llm_foundations/07_decoder_transformer.ipynb) |
+| 8 | Position encodings and RoPE | [Notebook](01_llm_foundations/08_position_encodings_rope.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/01_llm_foundations/08_position_encodings_rope.ipynb) |
+| 9 | Efficient attention and KV caches | [Notebook](01_llm_foundations/09_efficient_attention.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/01_llm_foundations/09_efficient_attention.ipynb) |
+| 10 | Mixture-of-Experts transformers | [Notebook](01_llm_foundations/10_mixture_of_experts.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/01_llm_foundations/10_mixture_of_experts.ipynb) |
+| 11 | Scaling laws and training-compute planning | [Notebook](01_llm_foundations/11_scaling_laws_compute_planning.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/01_llm_foundations/11_scaling_laws_compute_planning.ipynb) |
+| 12 | Interpretability and model debugging | [Notebook](01_llm_foundations/12_interpretability_debugging.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/01_llm_foundations/12_interpretability_debugging.ipynb) |
 | 13 | Training data, tokenization, and packing | [Notebook](02_training/13_data_tokenization_packing.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/02_training/13_data_tokenization_packing.ipynb) |
 | 14 | Synthetic data pipelines | [Notebook](02_training/14_synthetic_data_pipelines.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/02_training/14_synthetic_data_pipelines.ipynb) |
 | 15 | Pretraining a tiny decoder with native PyTorch | [Notebook](02_training/15_native_pytorch_pretraining.ipynb) | [Open](https://colab.research.google.com/github/brettharder/llm_course/blob/main/02_training/15_native_pytorch_pretraining.ipynb) |
@@ -148,7 +150,8 @@ uv run python validate_course.py
 ```
 
 The generator, [lesson_expansions.py](lesson_expansions.py), [course_extensions.py](course_extensions.py),
-and [course_deepening.py](course_deepening.py) are the source of truth.
+and [course_deepening.py](course_deepening.py) are the source of truth. Curated papers,
+specifications, and official documentation live in [course_references.py](course_references.py).
 Generated notebooks contain no saved outputs or credentials. Validation also enforces minimum
 lesson depth so later edits do not accidentally collapse notebooks back into short outlines.
 
@@ -156,7 +159,7 @@ lesson depth so later edits do not accidentally collapse notebooks back into sho
 
 ```text
 00_prerequisites/          NumPy, PyTorch, autograd, data, training, and integration practice
-01_math_foundations/       Decoder, attention, positional, and MoE foundations
+01_llm_foundations/        LLM mathematics, tokenization, decoder architecture, attention, RoPE, MoE, scaling, and interpretability
 02_training/               Data, synthetic data, pretraining, SFT, preferences, and reasoning RL
 03_huggingface/            Hub and inference workflows
 04_retrieval/              Embeddings, baseline RAG, hybrid retrieval, and reranking
@@ -168,8 +171,11 @@ lesson depth so later edits do not accidentally collapse notebooks back into sho
 create_course.py           Notebook generator and core lessons
 course_extensions.py       Prerequisites, current-stack lessons, and capstones
 course_deepening.py        Lesson-specific derivations, diagnostics, and applied labs
+course_references.py       Curated primary papers, specifications, and official documentation
 lesson_expansions.py       Comprehensive lesson/reference expansions
 validate_course.py         Static course and security validation
+COURSE_QUALITY.md          Required lesson anatomy and study rubric
+COURSE_REVIEW.md           Curriculum coverage, findings, and deliberate scope boundaries
 ```
 
 ## License

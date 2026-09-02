@@ -27,6 +27,9 @@ for path in paths:
     title = notebook.get("cells", [{}])[0].get("source", "")
     if not re.search(rf"# Notebook {number:02d}\b", title):
         errors.append(f"{path}: first cell title does not match notebook number")
+    objective_count = len(re.findall(r"^\s*- ", title, flags=re.MULTILINE))
+    if objective_count < 3:
+        errors.append(f"{path}: introduction needs at least 3 explicit learning objectives")
     cells = notebook.get("cells", [])
     if len(cells) < 2 or cells[1].get("cell_type") != "code":
         errors.append(f"{path}: missing Colab setup as second cell")
@@ -40,6 +43,8 @@ for path in paths:
     markdown_words = 0
     lesson_code_cells = 0
     lesson_headings = 0
+    numbered_sections: list[str] = []
+    primary_reference_links = 0
     for index, cell in enumerate(notebook.get("cells", []), 1):
         cell_id = cell.get("id")
         if not cell_id or cell_id in ids:
@@ -59,6 +64,9 @@ for path in paths:
         elif cell.get("cell_type") == "markdown":
             markdown_words += len(re.findall(r"\b[\w'-]+\b", cell.get("source", "")))
             lesson_headings += len(re.findall(r"^##+ ", cell.get("source", ""), flags=re.MULTILINE))
+            numbered_sections.extend(re.findall(r"^##+ (\d+\.\d+)\b", cell.get("source", ""), flags=re.MULTILINE))
+            if "## Primary references and further study" in cell.get("source", ""):
+                primary_reference_links += len(re.findall(r"\[[^]]+\]\(https?://[^)]+\)", cell.get("source", "")))
 
     if markdown_words < 840:
         errors.append(f"{path}: lesson depth regression ({markdown_words} markdown words; minimum 840)")
@@ -68,6 +76,21 @@ for path in paths:
         errors.append(f"{path}: needs at least 7 substantive lesson headings")
     if len(notebook.get("cells", [])) < 16:
         errors.append(f"{path}: needs at least 16 lesson/setup cells")
+    wrong_prefixes = [section for section in numbered_sections if int(section.split(".", 1)[0]) != number]
+    if wrong_prefixes:
+        errors.append(f"{path}: section numbers do not match notebook number: {wrong_prefixes}")
+    duplicate_sections = sorted({section for section in numbered_sections if numbered_sections.count(section) > 1})
+    if duplicate_sections:
+        errors.append(f"{path}: duplicate numbered sections: {duplicate_sections}")
+    if primary_reference_links < 2:
+        errors.append(f"{path}: needs at least 2 curated primary/official reference links")
+    exercise_source = next(
+        (cell.get("source", "") for cell in reversed(cells) if cell.get("cell_type") == "markdown" and "## Exercises" in cell.get("source", "")),
+        "",
+    )
+    exercise_count = len(re.findall(r"^\s*\d+\. ", exercise_source, flags=re.MULTILINE))
+    if exercise_count < 3 or "## Checkpoint" not in exercise_source:
+        errors.append(f"{path}: needs at least 3 numbered exercises and a checkpoint prompt")
 
     serialized = json.dumps(notebook).lower()
     for forbidden in ("import anthropic", "from openai import", "openai_api_key", "anthropic_api_key"):

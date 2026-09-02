@@ -1384,7 +1384,7 @@ lesson(30,
 
 lesson(32,
     ("md", r"""
-    ## 32.3 Tool-schema design in depth
+    ## 32.4 Tool-schema design in depth
 
     Tool descriptions should state purpose, when to use/not use it, parameter semantics, units,
     defaults, allowed ranges, and result/error shape. Prefer small orthogonal tools over one giant
@@ -1411,7 +1411,7 @@ lesson(32,
         except ValidationError as exc: print("invalid", candidate, exc.errors()[0]["type"])
     '''),
     ("md", r"""
-    ## 32.4 Agent loop states and control flow
+    ## 32.5 Agent loop states and control flow
 
     A robust loop is a state machine: receive request → call model → validate proposed calls →
     authorize → execute with timeout → normalize observation → append exact tool-call/result IDs →
@@ -1446,7 +1446,7 @@ lesson(32,
     for step in range(3): print(step, budget.admit(step, "calculator", {"expression": "2+2"}))
     '''),
     ("md", r"""
-    ## 32.5 Planning patterns and when not to use an agent
+    ## 32.6 Planning patterns and when not to use an agent
 
     A direct tool call is best for known workflows. A deterministic DAG/state machine is best when
     steps and transitions are known but tool results vary. An agent loop is justified when the next
@@ -1467,7 +1467,7 @@ lesson(32,
 
 lesson(34,
     ("md", r"""
-    ## 34.3 Protocol lifecycle and capability negotiation
+    ## 34.6 Protocol lifecycle and capability negotiation
 
     An MCP client connects over a transport, initializes a session, exchanges protocol versions and
     capabilities, then discovers primitives. Tools are model-invocable operations. Resources are
@@ -1494,7 +1494,7 @@ lesson(34,
     await describe_server()
     '''),
     ("md", r"""
-    ## 34.4 Server engineering and error design
+    ## 34.7 Server engineering and error design
 
     Tools should be thin adapters over tested domain functions, with typed parameters, bounded
     inputs/outputs, explicit side-effect annotations in descriptions, and sanitized errors. Avoid
@@ -1521,7 +1521,7 @@ lesson(34,
         print("bounded input test:", type(exc).__name__, str(exc))
     '''),
     ("md", r"""
-    ## 34.5 Host bridge and security policy
+    ## 34.8 Host bridge and security policy
 
     The host decides what the model sees and what is executed. Convert discovered schemas to the
     model's tool format, but maintain a server/tool allowlist, validate arguments locally, bind calls
@@ -2534,7 +2534,7 @@ Production ownership includes source freshness/deletion, index migrations, ACL a
 security response, and observable stage latency—not only the generation prompt.
 """,
 32: r"""
-## 32.6 Agent/tool reference
+## 32.7 Agent/tool reference
 
 | Layer | Responsibility |
 |---|---|
@@ -2556,7 +2556,7 @@ workflows without an agent when the state graph is known—the simplest sufficie
 more reliable and auditable.
 """,
 34: r"""
-## 34.6 MCP reference
+## 34.9 MCP reference
 
 | Primitive | Meaning |
 |---|---|
