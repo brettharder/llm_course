@@ -31,6 +31,31 @@ models after accepting their licenses; Inference Providers calls require the cor
 account permission. The setup cell copies the secret into the runtime environment but never
 prints it or stores it in the notebook.
 
+### VS Code Colab extension
+
+The VS Code extension still executes Python inside the remote Colab VM. It cannot read the `.env`
+file on your laptop unless that file is explicitly uploaded—which you should not do for credentials.
+Add `HF_TOKEN` through Colab's browser Secrets panel and enable notebook access, then reconnect or
+rerun the setup cell from VS Code. The course detects Colab by the installed `google.colab` module
+and Colab runtime variables, even when the extension attaches before that module has been imported.
+
+To validate authentication without displaying the token:
+
+```python
+import os
+from huggingface_hub import HfApi
+
+token = os.environ.get("HF_TOKEN")
+assert token, "HF_TOKEN is not available in this runtime"
+identity = HfApi(token=token).whoami()
+print("Connected to Hugging Face as:", identity["name"])
+```
+
+If presence is still reported as false, open the same notebook once in the Colab browser, confirm
+the secret name is exactly `HF_TOKEN`, turn on its notebook-access toggle, and reconnect the runtime.
+Secrets and installed packages disappear from process state when the remote runtime is replaced, so
+rerun the setup cell after every reconnect.
+
 ## 3. Run the setup cell
 
 The tagged `setup` / `colab` cell:

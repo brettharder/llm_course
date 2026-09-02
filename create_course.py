@@ -53,7 +53,13 @@ import platform
 import subprocess
 import sys
 
-IN_COLAB = "google.colab" in sys.modules
+# VS Code's Colab extension can attach to a Colab kernel before `google.colab`
+# has been imported, so checking only sys.modules produces a false negative.
+try:
+    HAS_GOOGLE_COLAB = importlib.util.find_spec("google.colab") is not None
+except ModuleNotFoundError:  # The parent `google` namespace is absent locally.
+    HAS_GOOGLE_COLAB = False
+IN_COLAB = HAS_GOOGLE_COLAB or bool(os.getenv("COLAB_RELEASE_TAG")) or bool(os.getenv("COLAB_GPU"))
 PACKAGES = {packages!r}
 
 if IN_COLAB and PACKAGES:
@@ -62,25 +68,29 @@ if IN_COLAB and PACKAGES:
 
 # Load an HF token from Colab Secrets without displaying it. In Colab, create a
 # secret named HF_TOKEN (or HUGGINGFACE_TOKEN) and enable notebook access.
-if IN_COLAB:
+token = os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_TOKEN")
+if IN_COLAB and not token:
     from google.colab import userdata
-    token = None
     for secret_name in ("HF_TOKEN", "HUGGINGFACE_TOKEN"):
         try:
             token = userdata.get(secret_name)
         except Exception:
-            pass
+            token = None
         if token:
             break
-    if token:
-        os.environ["HF_TOKEN"] = token
-        os.environ["HUGGINGFACE_TOKEN"] = token
-else:
+elif not IN_COLAB:
     try:
         from dotenv import load_dotenv
         load_dotenv(".env")
     except ImportError:
         pass
+    token = os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_TOKEN")
+
+# `HF_TOKEN` is the canonical huggingface_hub variable. The course also sets its
+# descriptive alias because some lesson code uses HUGGINGFACE_TOKEN explicitly.
+if token:
+    os.environ["HF_TOKEN"] = token
+    os.environ["HUGGINGFACE_TOKEN"] = token
 
 try:
     import torch
@@ -94,7 +104,10 @@ try:
 except ImportError:
     print(f"runtime={{platform.platform()}} | Python={{platform.python_version()}}")
 
-print("Hugging Face token configured:", bool(os.getenv("HUGGINGFACE_TOKEN")))
+print("Colab runtime detected:", IN_COLAB)
+print("Hugging Face token configured:", bool(os.getenv("HF_TOKEN")))
+if IN_COLAB and not token:
+    print("Add an HF_TOKEN secret in Colab, enable notebook access, then rerun this cell.")
 '''
     cell = code(source)
     cell["metadata"] = {"tags": ["setup", "colab"]}
