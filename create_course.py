@@ -15,23 +15,25 @@ LESSONS: list[tuple[str, str, list[dict]]] = []
 COLAB_PACKAGES = {
     1: ["transformers>=4.51,<5", "sentencepiece"],
     6: ["transformers>=4.51,<5", "datasets>=3.5,<6", "sentencepiece"],
-    9: ["transformers>=4.51,<5", "datasets>=3.5,<6", "peft>=0.15", "trl>=0.16", "accelerate>=1.6", "bitsandbytes>=0.45", "sentencepiece"],
-    10: ["transformers>=4.51,<5", "datasets>=3.5,<6", "peft>=0.15", "trl>=0.16", "accelerate>=1.6", "bitsandbytes>=0.45", "sentencepiece"],
-    11: ["transformers>=4.51,<5", "huggingface-hub>=0.30,<1", "sentencepiece"],
-    12: ["transformers>=4.51,<5", "huggingface-hub>=0.30,<1", "python-dotenv>=1.1", "sentencepiece"],
-    13: ["sentence-transformers>=4,<6"],
-    14: ["sentence-transformers>=4,<6"],
-    15: ["huggingface-hub>=0.30,<1", "python-dotenv>=1.1"],
-    16: ["mcp>=1.6"],
+    8: ["transformers>=4.51,<5", "datasets>=3.5,<6"],
+    9: ["transformers>=4.51,<5", "datasets>=3.5,<6", "trl>=0.16", "peft>=0.15"],
+    12: ["transformers>=4.51,<5", "datasets>=3.5,<6", "peft>=0.15", "trl>=0.16", "accelerate>=1.6", "bitsandbytes>=0.45", "sentencepiece"],
+    13: ["transformers>=4.51,<5", "datasets>=3.5,<6", "peft>=0.15", "trl>=0.16", "accelerate>=1.6", "bitsandbytes>=0.45", "sentencepiece"],
+    14: ["transformers>=4.51,<5", "huggingface-hub>=0.30,<1", "sentencepiece"],
+    15: ["transformers>=4.51,<5", "huggingface-hub>=0.30,<1", "python-dotenv>=1.1", "sentencepiece"],
+    16: ["sentence-transformers>=4,<6"],
+    17: ["sentence-transformers>=4,<6"],
     18: ["huggingface-hub>=0.30,<1", "python-dotenv>=1.1"],
-    20: ["huggingface-hub>=0.30,<1", "python-dotenv>=1.1", "pillow>=10"],
-    22: ["httpx>=0.28"],
+    19: ["mcp>=1.6"],
+    21: ["huggingface-hub>=0.30,<1", "python-dotenv>=1.1"],
+    23: ["huggingface-hub>=0.30,<1", "python-dotenv>=1.1", "pillow>=10"],
+    25: ["httpx>=0.28"],
 }
 
 
 def colab_setup(number: int) -> dict:
     packages = COLAB_PACKAGES.get(number, [])
-    training = number in {9, 10}
+    training = number in {7, 8, 12, 13}
     source = f'''# Colab/local environment setup — run this cell first.
 import importlib.util
 import os
@@ -527,13 +529,452 @@ add("02_training/06_data_tokenization_packing.ipynb", "Training Data, Tokenizati
     "Write five automated dataset checks, including leakage and empty responses.",
 ])
 
-add("02_training/07_optimization_training_loop.ipynb", "Optimization and the Training Loop", [
+add("02_training/07_native_pytorch_pretraining.ipynb", "Pretraining a Tiny Decoder with Native PyTorch", [
+    "Turn raw text into causal language-model examples without a framework abstraction",
+    "Build and train a randomly initialized decoder for one small epoch",
+    "Evaluate loss, perplexity, generation, and checkpoint round trips honestly",
+], [
+    md(r"""
+    ## 7.1 What this experiment proves—and what it does not
+
+    Pretraining begins with random parameters and optimizes next-token likelihood over a large,
+    broad corpus. This notebook preserves that causal chain at toy scale: raw text becomes bytes,
+    bytes become fixed-length examples, a decoder predicts the following byte, and AdamW changes
+    every parameter. One epoch is enough to verify mechanics and watch loss fall, but not enough
+    to create a generally useful language model. Real runs differ by many orders of magnitude in
+    data, parameters, compute, validation breadth, and operational controls.
+
+    We use bytes so encoding is lossless and needs no learned tokenizer. IDs 0–255 represent byte
+    values and ID 256 marks document boundaries. The price is longer sequences and predictions
+    that operate below human-visible characters. This makes a byte tokenizer excellent teaching
+    machinery, not an automatic production choice.
+    """),
+    code(r'''
+    import math, random, torch
+    from torch import nn
+    from torch.nn import functional as F
+    from torch.utils.data import DataLoader, Dataset
+
+    torch.manual_seed(42); random.seed(42)
+    device = "cuda" if torch.cuda.is_available() else (
+        "mps" if getattr(torch.backends, "mps", None) and torch.backends.mps.is_available() else "cpu")
+    EOS, VOCAB_SIZE, SEQ_LEN = 256, 257, 64
+    documents = [
+        "A language model estimates the next token from the tokens before it.",
+        "Attention mixes information across earlier positions in a causal sequence.",
+        "Training data quality, coverage, and provenance shape model behavior.",
+        "Validation loss estimates generalization to held-out text.",
+        "Small experiments verify code; they do not establish broad capability.",
+        "Gradient descent updates parameters to reduce average negative log likelihood.",
+    ]
+    train_docs, valid_docs = documents[:5], documents[5:]
+    def encode(text): return list(text.encode("utf-8"))
+    def decode(ids): return bytes(i for i in ids if i < 256).decode("utf-8", errors="replace")
+    print("device:", device, "example IDs:", encode("LLM") + [EOS])
+    ''') ,
+    code(r'''
+    class ByteBlocks(Dataset):
+        def __init__(self, docs, repeats, sequence_length):
+            stream = []
+            for _ in range(repeats):
+                for doc in docs: stream.extend(encode(doc) + [EOS])
+            self.tokens = torch.tensor(stream, dtype=torch.long)
+            self.starts = list(range(0, len(stream) - sequence_length - 1, sequence_length))
+            self.sequence_length = sequence_length
+        def __len__(self): return len(self.starts)
+        def __getitem__(self, index):
+            start = self.starts[index]
+            window = self.tokens[start:start + self.sequence_length + 1]
+            return window[:-1], window[1:]
+
+    train_data = ByteBlocks(train_docs, repeats=30, sequence_length=SEQ_LEN)
+    valid_data = ByteBlocks(valid_docs, repeats=8, sequence_length=SEQ_LEN)
+    train_loader = DataLoader(train_data, batch_size=16, shuffle=True)
+    valid_loader = DataLoader(valid_data, batch_size=16)
+    x, y = next(iter(train_loader))
+    print("examples:", len(train_data), "batch:", x.shape, "shift correct:", torch.equal(x[:, 1:], y[:, :-1]))
+    ''') ,
+    md(r"""
+    ## 7.2 A small modern decoder
+
+    Each block is pre-normalized: causal self-attention and a feed-forward network each add a
+    residual update. PyTorch's scaled-dot-product attention can select an optimized kernel on
+    supported hardware. Learned position embeddings keep this implementation compact; Notebook 4
+    develops RoPE, and Notebook 5 explains why fused attention changes memory traffic rather than
+    the mathematical attention result. Input and output embeddings are tied, reducing parameters
+    and forcing both interfaces to share a token geometry.
+    """),
+    code(r'''
+    class Block(nn.Module):
+        def __init__(self, width, heads):
+            super().__init__(); self.heads = heads; self.head_dim = width // heads
+            self.norm1, self.norm2 = nn.LayerNorm(width), nn.LayerNorm(width)
+            self.qkv, self.proj = nn.Linear(width, 3 * width), nn.Linear(width, width)
+            self.ff = nn.Sequential(nn.Linear(width, 4 * width), nn.GELU(), nn.Linear(4 * width, width))
+        def forward(self, x):
+            b, t, c = x.shape
+            q, k, v = self.qkv(self.norm1(x)).chunk(3, dim=-1)
+            shape = (b, t, self.heads, self.head_dim)
+            q, k, v = [z.view(shape).transpose(1, 2) for z in (q, k, v)]
+            attended = F.scaled_dot_product_attention(q, k, v, is_causal=True)
+            x = x + self.proj(attended.transpose(1, 2).contiguous().view(b, t, c))
+            return x + self.ff(self.norm2(x))
+
+    class TinyDecoder(nn.Module):
+        def __init__(self, vocab=VOCAB_SIZE, width=96, layers=3, heads=4, max_length=SEQ_LEN):
+            super().__init__(); self.max_length = max_length
+            self.token = nn.Embedding(vocab, width); self.position = nn.Embedding(max_length, width)
+            self.blocks = nn.ModuleList([Block(width, heads) for _ in range(layers)])
+            self.norm = nn.LayerNorm(width); self.head = nn.Linear(width, vocab, bias=False)
+            self.head.weight = self.token.weight
+        def forward(self, ids, labels=None):
+            positions = torch.arange(ids.shape[1], device=ids.device)
+            hidden = self.token(ids) + self.position(positions)
+            for block in self.blocks: hidden = block(hidden)
+            logits = self.head(self.norm(hidden))
+            loss = F.cross_entropy(logits.flatten(0, 1), labels.flatten()) if labels is not None else None
+            return logits, loss
+
+    model = TinyDecoder().to(device)
+    print(f"parameters: {sum(p.numel() for p in model.parameters()):,}")
+    ''') ,
+    code(r'''
+    @torch.no_grad()
+    def generate(model, prompt, new_tokens=80, temperature=0.8):
+        ids = torch.tensor([encode(prompt)], device=device)
+        for _ in range(new_tokens):
+            context = ids[:, -model.max_length:]
+            logits, _ = model(context)
+            probs = torch.softmax(logits[:, -1] / temperature, dim=-1)
+            nxt = torch.multinomial(probs, 1)
+            ids = torch.cat((ids, nxt), dim=1)
+        return decode(ids[0].tolist())
+
+    print("BEFORE:", repr(generate(model, "Training ", 50)))
+    ''') ,
+    code(r'''
+    optimizer = torch.optim.AdamW(model.parameters(), lr=3e-3, weight_decay=0.1)
+    model.train(); running = []
+    for inputs, labels in train_loader:                 # exactly one epoch
+        inputs, labels = inputs.to(device), labels.to(device)
+        optimizer.zero_grad(set_to_none=True)
+        _, loss = model(inputs, labels)
+        loss.backward()
+        nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+        optimizer.step(); running.append(loss.item())
+    print(f"one-epoch mean train loss: {sum(running)/len(running):.3f}")
+    ''') ,
+    code(r'''
+    @torch.no_grad()
+    def evaluate(loader):
+        model.eval(); weighted_loss = 0.0; tokens = 0
+        for inputs, labels in loader:
+            inputs, labels = inputs.to(device), labels.to(device)
+            _, loss = model(inputs, labels)
+            weighted_loss += loss.item() * labels.numel(); tokens += labels.numel()
+        mean = weighted_loss / tokens
+        return {"loss": mean, "perplexity": math.exp(min(mean, 20)), "tokens": tokens}
+
+    print("validation:", evaluate(valid_loader))
+    print("AFTER:", repr(generate(model, "Training ", 80)))
+    ''') ,
+    code(r'''
+    from pathlib import Path
+    checkpoint = Path("artifacts/native_pretraining/tiny_decoder.pt")
+    checkpoint.parent.mkdir(parents=True, exist_ok=True)
+    torch.save({"model": model.state_dict(), "config": {"vocab": VOCAB_SIZE, "max_length": SEQ_LEN}}, checkpoint)
+    restored = TinyDecoder().to(device)
+    restored.load_state_dict(torch.load(checkpoint, map_location=device, weights_only=True)["model"])
+    restored.eval()
+    probe = torch.tensor([encode("A model")], device=device)
+    with torch.no_grad():
+        print("checkpoint exact:", torch.equal(model(probe)[0], restored(probe)[0]))
+    ''') ,
+], [
+    "Replace learned positions with the RoPE implementation from Notebook 4.",
+    "Add validation checkpoints during the epoch and plot train versus validation loss.",
+    "Increase corpus diversity while holding token count fixed; explain the changed generations.",
+])
+
+add("02_training/08_hf_random_init_pretraining.ipynb", "Pretraining a Random-Initialized Hugging Face Model", [
+    "Instantiate a Transformers causal LM from configuration rather than downloaded weights",
+    "Run a one-epoch Hugging Face-compatible pretraining loop and save_pretrained artifact",
+    "Separate architecture, tokenizer, weights, training recipe, and downstream usability",
+], [
+    md(r"""
+    ## 8.1 `from_config` means architecture without learned knowledge
+
+    `from_pretrained` loads a configuration plus learned parameters. `from_config` constructs the
+    same kind of module with freshly initialized parameters. We deliberately combine a mature GPT-2
+    tokenizer with a very small GPT-2-shaped decoder. Reusing a tokenizer is convenient but does not
+    transfer the source model's language knowledge: the embedding rows and transformer weights are
+    random. The experiment therefore remains pretraining from scratch at the model-weight level.
+
+    Architecture size, tokenizer choice, corpus, context length, optimizer, and compute budget are
+    independent design axes. A production pretraining run needs held-out and contamination-controlled
+    evaluation, licensed and documented data, distributed checkpointing, resumability, and many more
+    tokens than this pedagogical run.
+    """),
+    code(r'''
+    import math, torch
+    from pathlib import Path
+    from torch.utils.data import DataLoader, Dataset
+    from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
+
+    torch.manual_seed(42)
+    device = "cuda" if torch.cuda.is_available() else (
+        "mps" if getattr(torch.backends, "mps", None) and torch.backends.mps.is_available() else "cpu")
+    TOKENIZER_ID = "openai-community/gpt2"
+    tokenizer = AutoTokenizer.from_pretrained(TOKENIZER_ID)
+    tokenizer.pad_token = tokenizer.eos_token
+    config = AutoConfig.for_model("gpt2", vocab_size=len(tokenizer), n_positions=96, n_ctx=96,
+                                  n_embd=128, n_layer=3, n_head=4,
+                                  bos_token_id=tokenizer.bos_token_id, eos_token_id=tokenizer.eos_token_id)
+    model = AutoModelForCausalLM.from_config(config).to(device)  # random weights
+    print(type(model).__name__, f"parameters={model.num_parameters():,}", "device=", device)
+    ''') ,
+    code(r'''
+    corpus = [
+        "Language models learn distributions over token sequences.",
+        "A causal mask prevents attention from reading future positions.",
+        "The optimizer changes parameters using gradients of prediction loss.",
+        "Held-out loss measures prediction on text excluded from optimization.",
+        "Checkpoints pair weights with configuration and tokenizer artifacts.",
+        "Tiny demonstrations teach mechanics rather than general language ability.",
+    ]
+    def make_blocks(texts, repeats, block_size=64):
+        stream = []
+        for _ in range(repeats):
+            for text in texts: stream += tokenizer(text + tokenizer.eos_token, add_special_tokens=False).input_ids
+        usable = len(stream) // block_size * block_size
+        return [torch.tensor(stream[i:i+block_size]) for i in range(0, usable, block_size)]
+
+    class Blocks(Dataset):
+        def __init__(self, values): self.values = values
+        def __len__(self): return len(self.values)
+        def __getitem__(self, i): return {"input_ids": self.values[i]}
+
+    train_blocks = make_blocks(corpus[:5], repeats=24)
+    valid_blocks = make_blocks(corpus[5:], repeats=8)
+    def causal_collator(records):
+        # Blocks are equal length: stack directly and retain real EOS labels. A generic
+        # collator may mask every EOS when EOS is also configured as the padding token.
+        ids = torch.stack([record["input_ids"] for record in records])
+        return {"input_ids": ids, "attention_mask": torch.ones_like(ids), "labels": ids.clone()}
+    train_loader = DataLoader(Blocks(train_blocks), batch_size=8, shuffle=True, collate_fn=causal_collator)
+    valid_loader = DataLoader(Blocks(valid_blocks), batch_size=8, collate_fn=causal_collator)
+    print("train blocks:", len(train_blocks), "valid blocks:", len(valid_blocks))
+    ''') ,
+    code(r'''
+    @torch.no_grad()
+    def complete(prompt, max_new_tokens=30):
+        model.eval(); batch = tokenizer(prompt, return_tensors="pt").to(device)
+        output = model.generate(**batch, max_new_tokens=max_new_tokens, do_sample=True,
+                                temperature=0.8, pad_token_id=tokenizer.eos_token_id)
+        return tokenizer.decode(output[0], skip_special_tokens=True)
+    print("BEFORE:", repr(complete("A language model")))
+    ''') ,
+    code(r'''
+    optimizer = torch.optim.AdamW(model.parameters(), lr=5e-4, weight_decay=0.1)
+    model.train(); losses = []
+    for batch in train_loader:                          # exactly one epoch
+        batch = {key: value.to(device) for key, value in batch.items()}
+        optimizer.zero_grad(set_to_none=True)
+        output = model(**batch)
+        output.loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+        optimizer.step(); losses.append(output.loss.item())
+    print(f"one-epoch mean train loss: {sum(losses)/len(losses):.3f}")
+    ''') ,
+    code(r'''
+    @torch.no_grad()
+    def evaluate(loader):
+        model.eval(); total, batches = 0.0, 0
+        for batch in loader:
+            batch = {key: value.to(device) for key, value in batch.items()}
+            total += model(**batch).loss.item(); batches += 1
+        loss = total / batches
+        return {"loss": loss, "perplexity": math.exp(min(loss, 20))}
+    print("validation:", evaluate(valid_loader))
+    print("AFTER:", repr(complete("A language model")))
+    ''') ,
+    code(r'''
+    output_dir = Path("artifacts/hf_random_pretraining")
+    model.save_pretrained(output_dir, safe_serialization=True)
+    tokenizer.save_pretrained(output_dir)
+    reloaded = AutoModelForCausalLM.from_pretrained(output_dir).to(device)
+    probe = tokenizer("A causal mask", return_tensors="pt").to(device)
+    model.eval(); reloaded.eval()
+    with torch.no_grad():
+        delta = (model(**probe).logits - reloaded(**probe).logits).abs().max().item()
+    print("saved files:", sorted(p.name for p in output_dir.iterdir()), "max logit delta:", delta)
+    ''') ,
+    md(r"""
+    ## 8.2 Interpreting the result
+
+    Falling training loss proves the pipeline can fit this stream. It does not establish facts,
+    instruction following, safety, or even robust English generation. The validation set here is
+    tiny and shares style with training; its perplexity is a smoke test, not a scientific result.
+    The saved directory is nevertheless a genuine Hugging Face model artifact: config, weights,
+    tokenizer, and generation metadata can be reloaded through standard APIs and used as the
+    starting point for continued pretraining or the post-training stages in the next notebook.
+    """),
+], [
+    "Change only model width and compare parameters, step time, and held-out loss.",
+    "Train a tokenizer on the same corpus and explain why the result is not a fair quality comparison.",
+    "Resume from the saved artifact for a second epoch and preserve optimizer state separately.",
+])
+
+add("02_training/09_base_to_posttrained_models.ipynb", "From Base Model to Instruction, Reasoning, and Tool-Using Model", [
+    "Map continued pretraining, SFT, preference optimization, RL, distillation, and safety stages",
+    "Represent the data and objective used at each post-training stage",
+    "Explain reasoning models, test-time compute, tool use, and capability evaluation without mystique",
+], [
+    md(r"""
+    ## 9.1 Post-training changes behavior, not the fundamental token interface
+
+    A base causal model predicts plausible continuations. A user-facing assistant must interpret
+    roles, follow requests, respect policies, call tools, express uncertainty, and stop correctly.
+    Post-training reshapes which continuations are likely under those contexts. Most stages still
+    operate through token log probabilities; what changes is the data source, target, reward, or
+    optimization constraint. Instruction tuning is therefore not a switch from “next-token model”
+    to a different species of system.
+
+    There is no single mandatory recipe. A common pathway is base pretraining → optional domain
+    continued pretraining → supervised instruction tuning → preference optimization or RL → safety
+    tuning and adversarial evaluation → task-specific adapters, tool training, distillation, and
+    deployment optimization. Teams often iterate, mix data, or branch checkpoints. Every stage can
+    improve a target while degrading calibration, diversity, safety, or general capability.
+    """),
+    code(r'''
+    stages = [
+        ("base pretraining", "raw token sequences", "next-token cross-entropy", "broad representations"),
+        ("continued pretraining", "domain documents", "next-token cross-entropy", "domain adaptation"),
+        ("SFT", "prompt + desired response", "masked next-token cross-entropy", "instruction behavior"),
+        ("preference optimization", "chosen/rejected responses", "relative policy objective", "human preferences"),
+        ("RL with verifiers", "sampled trajectories + rewards", "policy optimization", "reasoning/search behavior"),
+        ("distillation", "teacher outputs/soft targets", "CE or divergence", "compress capabilities"),
+    ]
+    for name, data, objective, purpose in stages:
+        print(f"{name:24} | {data:29} | {objective:28} | {purpose}")
+    ''') ,
+    md(r"""
+    ## 9.2 Data contracts for different objectives
+
+    SFT demonstrations answer “what should the model produce?” Preference pairs answer “which of
+    these is better?” Reward-model records attach scalar or categorical judgments. Online RL records
+    prompts, sampled trajectories, rewards, and old-policy probabilities. Tool training additionally
+    needs exact schemas, valid arguments, tool results, recovery examples, and permission boundaries.
+    Quality depends on coverage and labeling consistency more than on the beauty of a trainer call.
+    """),
+    code(r'''
+    examples = {
+        "sft": {"messages": [{"role": "user", "content": "Return JSON."},
+                              {"role": "assistant", "content": '{"ok": true}'}]},
+        "preference": {"prompt": "Explain entropy.", "chosen": "Entropy measures uncertainty...",
+                       "rejected": "Entropy is always disorder."},
+        "verifiable_reasoning": {"prompt": "What is 17*23?", "response": "391", "reward": 1.0,
+                                 "verifier": "exact_answer_v2"},
+        "tool_trajectory": {"messages": [{"role": "user", "content": "Weather in Boston?"}],
+                            "tool_call": {"name": "weather", "arguments": {"city": "Boston"}},
+                            "tool_result": {"temperature_c": 21}, "final": "It is 21°C."},
+    }
+    for objective, record in examples.items(): print("\n", objective, record)
+    ''') ,
+    code(r'''
+    # Completion-only SFT: prompt tokens provide context but are not prediction targets.
+    import torch
+    prompt_ids = torch.tensor([11, 12, 13, 14])
+    answer_ids = torch.tensor([21, 22, 23])
+    input_ids = torch.cat((prompt_ids, answer_ids))
+    labels = input_ids.clone(); labels[:len(prompt_ids)] = -100
+    print("input IDs:", input_ids.tolist())
+    print("SFT labels:", labels.tolist(), "(-100 is ignored by cross-entropy)")
+    ''') ,
+    md(r"""
+    ## 9.3 Preference learning, reward models, and RL
+
+    A reward model is a learned measurement instrument, not truth. It can inherit rater bias and
+    reward superficial length, confidence, or style. DPO directly increases a chosen response's
+    advantage over a rejected one relative to a reference policy. Online methods instead sample
+    from the current policy, score results, and optimize expected reward while constraining drift.
+    PPO is historically common; group-relative methods such as GRPO can compare several sampled
+    completions without a separate value model. The surrounding engineering—sampling diversity,
+    reward normalization, KL control, filtering, and held-out evaluation—is part of the algorithm.
+    """),
+    code(r'''
+    import torch.nn.functional as F
+    policy_margin = torch.tensor([0.8, -0.2, 1.4])
+    reference_margin = torch.tensor([0.1, 0.0, 0.5])
+    beta = 0.1
+    dpo_losses = -F.logsigmoid(beta * (policy_margin - reference_margin))
+    print("per-pair DPO losses:", dpo_losses.tolist(), "mean:", dpo_losses.mean().item())
+    ''') ,
+    md(r"""
+    ## 9.4 What makes a “reasoning” or “thinking” model?
+
+    The label usually describes a training and inference regime, not a new transformer primitive.
+    Capabilities may be elicited through high-quality worked solutions, distilled traces from a
+    stronger teacher, rejection sampling, process supervision, and RL with verifiable outcome
+    rewards for math, code, or games. At inference, allocating more tokens, sampling multiple
+    candidates, voting, using search, or invoking a verifier spends test-time compute to improve
+    success probability. Gains are strongest where answers can be checked and weaker where rewards
+    are subjective or hackable.
+
+    A visible rationale is not guaranteed to be faithful to the model's internal computation, and
+    long answers are not synonymous with reasoning. Products may expose a concise explanation while
+    keeping internal scratch work private. Evaluate final correctness, robustness to perturbations,
+    calibration, token/latency cost, and verifier integrity rather than grading prose alone.
+    """),
+    code(r'''
+    # Test-time compute as best-of-N under an independent toy success model.
+    p_one = 0.35
+    for samples in [1, 2, 4, 8, 16]:
+        at_least_one = 1 - (1 - p_one) ** samples
+        print(f"samples={samples:2d} theoretical pass@N={at_least_one:.1%}")
+    print("Real samples are correlated and selection/verifiers are imperfect.")
+    ''') ,
+    md(r"""
+    ## 9.5 Instruction following, tools, safety, and specialization
+
+    Chat templates serialize roles into tokens; the model must be trained on that exact convention.
+    Tool use is structured prediction plus an external control plane: the model proposes a call, but
+    trusted software validates schema, authorization, budgets, and side effects. Retrieval adds current
+    knowledge without placing it in weights. Adapters can specialize style or tasks cheaply. Safety
+    training combines desired refusals and safe completions with system-level isolation, monitoring,
+    red teaming, and incident response; weights alone cannot enforce authorization.
+
+    Release gates should compare each checkpoint with its parent on target capability, broad retention,
+    safety, calibration, latency, output length, and subgroup slices. Keep frozen prompts and blinded
+    human evaluation, but also use deterministic validators whenever answers are mechanically checkable.
+    The deployable model is the checkpoint plus tokenizer, chat template, decoding policy, tools,
+    retrieval, safety controls, and serving configuration.
+    """),
+    code(r'''
+    decision_guide = {
+        "fresh/current facts": "retrieval or tools",
+        "consistent response format": "SFT or constrained decoding",
+        "cheap domain specialization": "LoRA/adapter SFT",
+        "rank subjective answer quality": "preference data + DPO/reward modeling",
+        "verifiable multi-step problem solving": "reasoning SFT + RL/verifier + test-time search",
+        "latency/cost reduction": "distillation, quantization, serving optimization",
+        "permission enforcement": "application control plane—not model training",
+    }
+    for need, method in decision_guide.items(): print(f"{need:38} -> {method}")
+    ''') ,
+], [
+    "Design a staged recipe for a code assistant and define a release gate after every checkpoint.",
+    "Create five preference pairs where style conflicts with correctness; write adjudication rules.",
+    "Compare single-sample accuracy with best-of-N accuracy and total generated-token cost.",
+])
+
+add("02_training/10_optimization_training_loop.ipynb", "Optimization and the Training Loop", [
     "Implement forward, backward, clipping, optimizer, and scheduler steps",
     "Explain AdamW, warmup, weight decay, and gradient norms",
     "Recognize underfitting, overfitting, divergence, and data bugs",
 ], [
     md(r"""
-    ## 7.1 One optimizer update
+    ## 10.1 One optimizer update
 
     A robust update is: fetch batch → forward → masked mean loss → backward → optionally
     unscale → clip → optimizer step → scheduler step → zero gradients. AdamW maintains two
@@ -562,7 +1003,7 @@ add("02_training/07_optimization_training_loop.ipynb", "Optimization and the Tra
                   f"lr={scheduler.get_last_lr()[0]:.2e}")
     '''),
     md(r"""
-    ## 7.2 Debug the learning dynamics
+    ## 10.2 Debug the learning dynamics
 
     Log train and validation loss, learning rate, gradient norm, tokens/second, memory,
     skipped/overflowed steps, and data samples. A flat loss may mean bad labels or tiny LR;
@@ -576,13 +1017,13 @@ add("02_training/07_optimization_training_loop.ipynb", "Optimization and the Tra
     "Save a checkpoint at step 15 and verify resumed training matches a continuous run.",
 ])
 
-add("02_training/08_efficient_distributed_training.ipynb", "Memory-Efficient and Distributed Training", [
+add("02_training/11_efficient_distributed_training.ipynb", "Memory-Efficient and Distributed Training", [
     "Use gradient accumulation without changing gradient scale",
     "Explain activation checkpointing and mixed precision tradeoffs",
     "Distinguish data, tensor, pipeline, and fully sharded parallelism",
 ], [
     md(r"""
-    ## 8.1 Where memory goes
+    ## 11.1 Where memory goes
 
     Training memory includes weights, gradients, optimizer states, saved activations, and
     temporary workspaces. Full-precision Adam can require roughly 16 bytes per parameter
@@ -596,7 +1037,7 @@ add("02_training/08_efficient_distributed_training.ipynb", "Memory-Efficient and
         print(f"{size:g}B params: {rough_gib(size):.1f} GiB before activations/workspace")
     '''),
     md(r"""
-    ## 8.2 Gradient accumulation
+    ## 11.2 Gradient accumulation
 
     For \(K\) microbatches, divide each microbatch loss by \(K\), call backward K times,
     then update once. Effective global batch is
@@ -619,7 +1060,7 @@ add("02_training/08_efficient_distributed_training.ipynb", "Memory-Efficient and
     print("one optimizer update from", accumulation_steps, "microbatches")
     '''),
     md(r"""
-    ## 8.3 Checkpointing, precision, and parallelism
+    ## 11.3 Checkpointing, precision, and parallelism
 
     Activation checkpointing saves selected inputs and recomputes forward regions during
     backward: less memory, more compute. BF16 has FP32-like exponent range and is preferred
@@ -640,13 +1081,13 @@ add("02_training/08_efficient_distributed_training.ipynb", "Memory-Efficient and
     "Draw a topology for training a model that cannot fit on one node.",
 ])
 
-add("02_training/09_sft_lora_qlora.ipynb", "Supervised Fine-Tuning with LoRA and QLoRA", [
+add("02_training/12_sft_lora_qlora.ipynb", "Supervised Fine-Tuning with LoRA and QLoRA", [
     "Choose among prompting, RAG, full fine-tuning, LoRA, and QLoRA",
     "Explain low-rank adapters mathematically and count trainable parameters",
     "Configure a guarded TRL SFT run with evaluation",
 ], [
     md(r"""
-    ## 9.1 What fine-tuning changes
+    ## 12.1 What fine-tuning changes
 
     Use RAG to supply changing knowledge; use SFT to teach behavior, format, terminology,
     or a task distribution. LoRA freezes base weight \(W\) and learns
@@ -664,7 +1105,7 @@ add("02_training/09_sft_lora_qlora.ipynb", "Supervised Fine-Tuning with LoRA and
         print(rank, f"{adapter:,}", f"({adapter/full:.3%} of matrix)")
     '''),
     md(r"""
-    ## 9.2 A reproducible SFT configuration
+    ## 12.2 A reproducible SFT configuration
 
     Evaluate the untouched base model first. Freeze dataset/model revisions. Separate
     validation by source or time when duplicates are likely. Inspect rendered chat text.
@@ -697,7 +1138,7 @@ add("02_training/09_sft_lora_qlora.ipynb", "Supervised Fine-Tuning with LoRA and
         print("Training skipped. Review configuration, then opt in on a suitable GPU.")
     '''),
     md(r"""
-    ## 9.3 Validate the adapter
+    ## 12.3 Validate the adapter
 
     Compare base and adapter on frozen prompts with greedy and sampled runs. Check task
     quality, general capability retention, safety behavior, latency, and adapter load/merge
@@ -710,13 +1151,13 @@ add("02_training/09_sft_lora_qlora.ipynb", "Supervised Fine-Tuning with LoRA and
     "Run a tiny adapter experiment and report base/adapter results with uncertainty.",
 ])
 
-add("02_training/10_preference_optimization_dpo.ipynb", "Preference Data and Direct Preference Optimization", [
+add("02_training/13_preference_optimization_dpo.ipynb", "Preference Data and Direct Preference Optimization", [
     "Represent chosen/rejected preference pairs and identify data pathologies",
     "Explain the DPO objective relative to a reference policy",
     "Configure a guarded TRL DPO experiment and evaluate behavior",
 ], [
     md(r"""
-    ## 10.1 From demonstrations to preferences
+    ## 13.1 From demonstrations to preferences
 
     SFT learns from desired responses. Preference optimization learns that response
     \(y_w\) is preferred to \(y_l\) for prompt \(x\). Preferences can encode correctness,
@@ -724,7 +1165,7 @@ add("02_training/10_preference_optimization_dpo.ipynb", "Preference Data and Dir
     training signal. Keep ties/ambiguity, rater metadata, and clear guidelines.
     """),
     md(r"""
-    ## 10.2 DPO intuition
+    ## 13.2 DPO intuition
 
     DPO increases the policy's log-probability advantage for chosen over rejected answers,
     relative to the same advantage under a reference policy. A common loss is
@@ -780,13 +1221,13 @@ add("02_training/10_preference_optimization_dpo.ipynb", "Preference Data and Dir
 # Module 3 — Hugging Face inference
 # ---------------------------------------------------------------------------
 
-add("03_huggingface/11_hub_models_inference.ipynb", "The Hub, Model Cards, and Inference", [
+add("03_huggingface/14_hub_models_inference.ipynb", "The Hub, Model Cards, and Inference", [
     "Inspect model metadata, revisions, licenses, and intended use",
     "Load models locally without leaking credentials",
     "Use Hugging Face Inference Providers through one client",
 ], [
     md(r"""
-    ## 11.1 Artifacts and trust
+    ## 14.1 Artifacts and trust
 
     A model repository can contain weights, configuration, tokenizer files, generation
     defaults, chat templates, and custom code. Read the model card and license; pin a commit
@@ -821,7 +1262,7 @@ add("03_huggingface/11_hub_models_inference.ipynb", "The Hub, Model Cards, and I
     print(tokenizer.decode(new_tokens, skip_special_tokens=True))
     '''),
     md(r"""
-    ## 11.2 Remote inference without provider-specific application code
+    ## 14.2 Remote inference without provider-specific application code
 
     `InferenceClient` routes requests to supported providers. Availability, structured
     output, pricing, and limits vary by model/provider, so keep the model configurable and
@@ -845,13 +1286,13 @@ add("03_huggingface/11_hub_models_inference.ipynb", "The Hub, Model Cards, and I
     "Write a loader that refuses undeclared or disallowed licenses.",
 ])
 
-add("03_huggingface/12_generation_batching_structured.ipynb", "Generation, Batching, Streaming, and Structured Output", [
+add("03_huggingface/15_generation_batching_structured.ipynb", "Generation, Batching, Streaming, and Structured Output", [
     "Choose decoding parameters based on task requirements",
     "Batch variable-length prompts and separate prompt/output tokens",
     "Stream and validate schema-constrained responses",
 ], [
     md(r"""
-    ## 12.1 Decoding is part of the product contract
+    ## 15.1 Decoding is part of the product contract
 
     Greedy decoding is reproducible but not universally best. Temperature rescales logits;
     top-k keeps k candidates; top-p keeps the smallest set reaching cumulative probability
@@ -866,7 +1307,7 @@ add("03_huggingface/12_generation_batching_structured.ipynb", "Generation, Batch
         print(temperature, torch.softmax(logits / temperature, -1).numpy().round(3))
     '''),
     md(r"""
-    ## 12.2 Batch locally
+    ## 15.2 Batch locally
 
     Decoder-only models should generally left-pad for batched generation so the final
     non-padding position aligns across examples. Slice each output after the padded input
@@ -913,7 +1354,7 @@ add("03_huggingface/12_generation_batching_structured.ipynb", "Generation, Batch
         print("Remote cell skipped: HUGGINGFACE_TOKEN is not configured.")
     '''),
     md(r"""
-    ## 12.3 Streaming semantics
+    ## 15.3 Streaming semantics
 
     Streaming improves perceived latency but not necessarily total latency. Clients must
     handle partial UTF-8/text, finish reasons, usage arriving at the end, cancellation,
@@ -929,13 +1370,13 @@ add("03_huggingface/12_generation_batching_structured.ipynb", "Generation, Batch
 # Module 4 — Retrieval
 # ---------------------------------------------------------------------------
 
-add("04_retrieval/13_embeddings_semantic_search.ipynb", "Embeddings and Semantic Search", [
+add("04_retrieval/16_embeddings_semantic_search.ipynb", "Embeddings and Semantic Search", [
     "Normalize embeddings and implement cosine/dot-product retrieval",
     "Separate bi-encoder retrieval from cross-encoder reranking",
     "Measure recall@k, MRR, latency, and index tradeoffs",
 ], [
     md(r"""
-    ## 13.1 Dense retrieval
+    ## 16.1 Dense retrieval
 
     A bi-encoder maps queries and documents independently into vectors. Precomputed document
     vectors make retrieval fast. With unit-normalized vectors, cosine similarity equals dot
@@ -977,7 +1418,7 @@ add("04_retrieval/13_embeddings_semantic_search.ipynb", "Embeddings and Semantic
     print("recall@1", recall_at_k(rankings, gold, 1), "MRR", reciprocal_rank(rankings, gold))
     '''),
     md(r"""
-    ## 13.2 Indexes and rerankers
+    ## 16.2 Indexes and rerankers
 
     Exact search scans every vector. Approximate nearest-neighbor indexes trade recall for
     speed/memory using structures such as HNSW or inverted files. A cross-encoder jointly
@@ -991,13 +1432,13 @@ add("04_retrieval/13_embeddings_semantic_search.ipynb", "Embeddings and Semantic
     "Demonstrate how normalization changes dot-product ranking.",
 ])
 
-add("04_retrieval/14_end_to_end_rag.ipynb", "End-to-End RAG and Retrieval Evaluation", [
+add("04_retrieval/17_end_to_end_rag.ipynb", "End-to-End RAG and Retrieval Evaluation", [
     "Chunk source documents and preserve auditable metadata",
     "Build retrieve → rerank → assemble → generate stages",
     "Evaluate retrieval separately from grounded answer quality",
 ], [
     md(r"""
-    ## 14.1 RAG is a pipeline, not a prompt trick
+    ## 17.1 RAG is a pipeline, not a prompt trick
 
     Ingestion parses sources, chunks text, attaches metadata, embeds, and indexes. Query-time
     processing may rewrite a question, retrieve, filter, rerank, deduplicate, and fit context
@@ -1047,7 +1488,7 @@ add("04_retrieval/14_end_to_end_rag.ipynb", "End-to-End RAG and Retrieval Evalua
     print(build_context(results))
     '''),
     md(r"""
-    ## 14.2 Generation contract
+    ## 17.2 Generation contract
 
     Tell the model to use evidence, admit insufficiency, and cite source IDs. Treat retrieved
     text as untrusted data: it may contain instructions. Context ordering and lost-in-the-
@@ -1065,7 +1506,7 @@ add("04_retrieval/14_end_to_end_rag.ipynb", "End-to-End RAG and Retrieval Evalua
     print(prompt)
     '''),
     md(r"""
-    ## 14.3 Evaluate stages separately
+    ## 17.3 Evaluate stages separately
 
     Retrieval metrics: recall@k, MRR, nDCG, metadata-filter correctness. Generation metrics:
     answer correctness, citation precision/recall, faithfulness/entailment, completeness, and
@@ -1082,13 +1523,13 @@ add("04_retrieval/14_end_to_end_rag.ipynb", "End-to-End RAG and Retrieval Evalua
 # Module 5 — Agents and MCP
 # ---------------------------------------------------------------------------
 
-add("05_agents_mcp/15_tool_calling_agents.ipynb", "Tool Calling and Bounded Agent Loops", [
+add("05_agents_mcp/18_tool_calling_agents.ipynb", "Tool Calling and Bounded Agent Loops", [
     "Define precise JSON tool contracts and validate arguments",
     "Implement a bounded model → tool → observation loop with HF inference",
     "Separate planning flexibility from authorization",
 ], [
     md(r"""
-    ## 15.1 Tools are capability boundaries
+    ## 18.1 Tools are capability boundaries
 
     A tool schema is an interface contract, not a security boundary. Validate types and
     values in code; enforce authentication and authorization outside the model; return
@@ -1143,7 +1584,7 @@ add("05_agents_mcp/15_tool_calling_agents.ipynb", "Tool Calling and Bounded Agen
     print(run_agent("What is (17 * 23) + 9?"))
     '''),
     md(r"""
-    ## 15.2 Reliability controls
+    ## 18.2 Reliability controls
 
     Limit steps, wall time, tokens, tool calls, and spend. Detect repeated identical calls.
     Distinguish read-only tools from reversible and irreversible actions. Require human
@@ -1156,13 +1597,13 @@ add("05_agents_mcp/15_tool_calling_agents.ipynb", "Tool Calling and Bounded Agen
     "Create an evaluation set for tool selection, arguments, and final answers.",
 ])
 
-add("05_agents_mcp/16_mcp_server_hf_client.ipynb", "Building an MCP Server for an HF Agent", [
+add("05_agents_mcp/19_mcp_server_hf_client.ipynb", "Building an MCP Server for an HF Agent", [
     "Distinguish MCP tools, resources, prompts, and transports",
     "Create and inspect a FastMCP server from a notebook",
     "Bridge discovered MCP tools into a Hugging Face agent safely",
 ], [
     md(r"""
-    ## 16.1 MCP standardizes context integration
+    ## 19.1 MCP standardizes context integration
 
     An MCP host connects to servers through clients. Servers expose tools (actions),
     resources (readable context), and prompts (templates). The protocol standardizes
@@ -1216,7 +1657,7 @@ add("05_agents_mcp/16_mcp_server_hf_client.ipynb", "Building an MCP Server for a
     await inspect_server()
     '''),
     md(r"""
-    ## 16.2 Bridge deliberately
+    ## 19.2 Bridge deliberately
 
     Convert MCP schemas to the chat model's tool format, but keep execution in the host.
     Maintain an allowlist by server/tool, validate every argument again, cap response sizes,
@@ -1233,13 +1674,13 @@ add("05_agents_mcp/16_mcp_server_hf_client.ipynb", "Building an MCP Server for a
 # Module 6 — Evaluation and security
 # ---------------------------------------------------------------------------
 
-add("06_evaluation_security/17_evaluation_fundamentals.ipynb", "Evaluation Fundamentals and Regression Testing", [
+add("06_evaluation_security/20_evaluation_fundamentals.ipynb", "Evaluation Fundamentals and Regression Testing", [
     "Turn product requirements into representative datasets and graders",
     "Combine deterministic, statistical, retrieval, model-based, and human evaluation",
     "Compare systems with slices, uncertainty, and regression gates",
 ], [
     md(r"""
-    ## 17.1 Begin with decisions
+    ## 20.1 Begin with decisions
 
     An evaluation is evidence for a decision: ship a prompt, choose a model, accept a
     training run, or diagnose a failure. Define the unit, population, success criterion,
@@ -1260,7 +1701,7 @@ add("06_evaluation_security/17_evaluation_fundamentals.ipynb", "Evaluation Funda
         print(row)
     '''),
     md(r"""
-    ## 17.2 Match graders to failure modes
+    ## 20.2 Match graders to failure modes
 
     Use executable tests for code, schema validators for structure, exact/set comparison for
     constrained answers, retrieval metrics for ranking, and expert review for domain nuance.
@@ -1278,7 +1719,7 @@ add("06_evaluation_security/17_evaluation_fundamentals.ipynb", "Evaluation Funda
     print(f"score={mean:.3f}, illustrative bootstrap interval=({lo:.3f}, {hi:.3f})")
     '''),
     md(r"""
-    ## 17.3 Comparisons and gates
+    ## 20.3 Comparisons and gates
 
     Pair outputs by example when comparing systems. Report delta and confidence interval,
     not two isolated averages. Slice by language, length, risk, source, tool, and no-answer
@@ -1292,13 +1733,13 @@ add("06_evaluation_security/17_evaluation_fundamentals.ipynb", "Evaluation Funda
     "Compare two systems with a paired bootstrap and slice table.",
 ])
 
-add("06_evaluation_security/18_llm_as_a_judge.ipynb", "LLM as a Judge", [
+add("06_evaluation_security/21_llm_as_a_judge.ipynb", "LLM as a Judge", [
     "Design a criterion-level rubric and structured judge output",
     "Run pointwise and order-swapped pairwise judging with HF models",
     "Calibrate judge agreement and route uncertainty to humans",
 ], [
     md(r"""
-    ## 18.1 A judge is a measurement instrument
+    ## 21.1 A judge is a measurement instrument
 
     Separate correctness, relevance, completeness, and clarity. Define anchored score levels,
     decisive evidence, critical errors, and tie behavior. Candidate text is untrusted data.
@@ -1350,7 +1791,7 @@ add("06_evaluation_security/18_llm_as_a_judge.ipynb", "LLM as a Judge", [
         "It accumulates gradients from several microbatches before one optimizer update."))
     '''),
     md(r"""
-    ## 18.2 Bias controls
+    ## 21.2 Bias controls
 
     Pairwise judges can prefer answer position, verbosity, familiar style, or their own model
     family. Randomize hidden labels and judge both A/B and B/A; mark inconsistent pairs for
@@ -1371,13 +1812,13 @@ add("06_evaluation_security/18_llm_as_a_judge.ipynb", "LLM as a Judge", [
     "Calibrate two judge models against at least 50 human-labeled examples.",
 ])
 
-add("06_evaluation_security/19_llm_application_security.ipynb", "LLM Application Security", [
+add("06_evaluation_security/22_llm_application_security.ipynb", "LLM Application Security", [
     "Threat-model prompt injection, exfiltration, unsafe tools, and resource abuse",
     "Apply least privilege, validation, isolation, and approval controls",
     "Build adversarial tests and distinguish safety classification from security",
 ], [
     md(r"""
-    ## 19.1 Trust boundaries
+    ## 22.1 Trust boundaries
 
     System prompts, user text, retrieved documents, web pages, tool results, MCP resources,
     and model output have different origins but share one context window. Instructions in
@@ -1396,7 +1837,7 @@ add("06_evaluation_security/19_llm_application_security.ipynb", "LLM Application
     print("Delimiting preserves provenance for policy/evaluation; it does not neutralize text.")
     '''),
     md(r"""
-    ## 19.2 Defense in depth
+    ## 22.2 Defense in depth
 
     - Give each tool the minimum identity, scope, network access, and filesystem access.
     - Validate arguments against schemas plus semantic allowlists.
@@ -1423,7 +1864,7 @@ add("06_evaluation_security/19_llm_application_security.ipynb", "LLM Application
         except ValueError as exc: print("blocked", url, exc)
     '''),
     md(r"""
-    ## 19.3 Test the abuse cases
+    ## 22.3 Test the abuse cases
 
     Maintain direct/indirect injection, encoded instructions, conflicting sources, tool
     argument attacks, SSRF paths, cross-tenant identifiers, oversized content, repeated-call
@@ -1433,7 +1874,7 @@ add("06_evaluation_security/19_llm_application_security.ipynb", "LLM Application
     """),
 ], [
     "Draw a data-flow diagram and mark every trust/authorization boundary.",
-    "Attack the RAG prompt from Notebook 14 and add deterministic mitigations.",
+    "Attack the RAG prompt from Notebook 17 and add deterministic mitigations.",
     "Write ten security invariants that can be checked without an LLM judge.",
 ])
 
@@ -1441,13 +1882,13 @@ add("06_evaluation_security/19_llm_application_security.ipynb", "LLM Application
 # Module 7 — Multimodal
 # ---------------------------------------------------------------------------
 
-add("07_multimodal/20_vision_language_models.ipynb", "Vision-Language Models and Document Understanding", [
+add("07_multimodal/23_vision_language_models.ipynb", "Vision-Language Models and Document Understanding", [
     "Understand processor inputs, image tokens, resolution, and memory costs",
     "Run a guarded Hugging Face image-text-to-text example",
     "Evaluate OCR, charts, spatial reasoning, and grounded structured output",
 ], [
     md(r"""
-    ## 20.1 A multimodal request has two representations
+    ## 23.1 A multimodal request has two representations
 
     A processor transforms images (resize/crop/normalize/patchify) and text (tokenize/chat
     template) into model inputs. Visual encoders or native multimodal blocks create visual
@@ -1477,7 +1918,7 @@ add("07_multimodal/20_vision_language_models.ipynb", "Vision-Language Models and
         print("Remote example skipped: configure HUGGINGFACE_TOKEN.")
     '''),
     md(r"""
-    ## 20.2 Documents are not just images
+    ## 23.2 Documents are not just images
 
     PDFs may contain extractable text, tables, reading order, vector graphics, scans, and
     metadata. Prefer native extraction where reliable; use OCR/VLMs for visual structure and
@@ -1485,7 +1926,7 @@ add("07_multimodal/20_vision_language_models.ipynb", "Vision-Language Models and
     retain evidence regions. Defend against visual prompt injection in screenshots/documents.
     """),
     md(r"""
-    ## 20.3 Evaluate by capability
+    ## 23.3 Evaluate by capability
 
     Use exact field accuracy for extraction, normalized edit distance for OCR, table cell
     metrics, bounding-box overlap for grounding, and expert labels for chart reasoning.
@@ -1502,13 +1943,13 @@ add("07_multimodal/20_vision_language_models.ipynb", "Vision-Language Models and
 # Module 8 — Production
 # ---------------------------------------------------------------------------
 
-add("08_production/21_reliability_observability.ipynb", "Reliability, Observability, and Load Testing", [
+add("08_production/24_reliability_observability.ipynb", "Reliability, Observability, and Load Testing", [
     "Instrument latency, tokens, errors, quality, and cost with safe metadata",
     "Implement bounded concurrency, retries, cancellation, and backpressure",
     "Design load tests and deployment regression gates",
 ], [
     md(r"""
-    ## 21.1 Observe the full request lifecycle
+    ## 24.1 Observe the full request lifecycle
 
     Correlate request ID, trace ID, tenant-safe identifier, model/revision, prompt version,
     decoding config, queue time, TTFT, generation time, input/output tokens, finish reason,
@@ -1546,7 +1987,7 @@ add("08_production/21_reliability_observability.ipynb", "Reliability, Observabil
     print(results)
     '''),
     md(r"""
-    ## 21.2 Failure policy
+    ## 24.2 Failure policy
 
     Retry only transient, idempotent operations; respect server retry hints; add jitter; cap
     attempts and total deadline. Bound queues and concurrency—unbounded retries amplify
@@ -1555,7 +1996,7 @@ add("08_production/21_reliability_observability.ipynb", "Reliability, Observabil
     but can synchronize failures without randomized recovery.
     """),
     md(r"""
-    ## 21.3 Load and regression testing
+    ## 24.3 Load and regression testing
 
     Replay realistic distributions of prompt length, output length, streaming, retrieval,
     and tool use. Warm the system, increase offered load, and report p50/p95/p99 TTFT and
@@ -1569,13 +2010,13 @@ add("08_production/21_reliability_observability.ipynb", "Reliability, Observabil
     "Design a privacy-preserving trace sampling and retention policy.",
 ])
 
-add("08_production/22_vllm_serving.ipynb", "Serving Open Models with vLLM", [
+add("08_production/25_vllm_serving.ipynb", "Serving Open Models with vLLM", [
     "Launch and call an OpenAI-compatible vLLM server",
     "Relate continuous batching and paged KV management to throughput",
     "Plan capacity, parallelism, structured output, monitoring, and secure deployment",
 ], [
     md(r"""
-    ## 22.1 Serving changes the optimization target
+    ## 25.1 Serving changes the optimization target
 
     Local `generate()` is useful for experiments. A server must schedule concurrent requests,
     manage variable KV-cache allocations, stream, reject overload, expose health/metrics, and
@@ -1583,7 +2024,7 @@ add("08_production/22_vllm_serving.ipynb", "Serving Open Models with vLLM", [
     admits new sequences as others finish; block-based KV management reduces fragmentation.
     """),
     md(r"""
-    ## 22.2 Start on a supported accelerator host
+    ## 25.2 Start on a supported accelerator host
 
     Install vLLM according to the current accelerator-specific instructions, then run:
 
@@ -1614,7 +2055,7 @@ add("08_production/22_vllm_serving.ipynb", "Serving Open Models with vLLM", [
         print("Start the vLLM server, then rerun:", type(exc).__name__)
     '''),
     md(r"""
-    ## 22.3 Structured output and APIs
+    ## 25.3 Structured output and APIs
 
     Current vLLM releases support OpenAI-compatible chat/completions plus health, model, and
     Prometheus metrics endpoints. Structured constraints are passed in the current
@@ -1629,7 +2070,7 @@ add("08_production/22_vllm_serving.ipynb", "Serving Open Models with vLLM", [
     print(payload_extension)
     '''),
     md(r"""
-    ## 22.4 Scale only after measuring
+    ## 25.4 Scale only after measuring
 
     Tensor parallelism shards a model across GPUs; data parallelism replicates it for more
     traffic; pipeline/expert parallelism address other model/topology constraints. Communication
