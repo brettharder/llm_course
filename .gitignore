@@ -1,0 +1,38 @@
+# Secrets and local configuration
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+credentials*.json
+secrets*.json
+
+# Python environments and generated caches
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Jupyter and local tooling
+.ipynb_checkpoints/
+.jupyter/
+.DS_Store
+
+# Training/runtime artifacts
+artifacts/
+checkpoints/
+outputs/
+runs/
+wandb/
+demo_mcp_server.py
+
+# Model/data artifacts should live in external storage or the HF Hub
+*.safetensors
+*.bin
+*.gguf
+*.pt
+*.pth
+*.ckpt

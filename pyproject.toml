@@ -1,0 +1,42 @@
+[project]
+name = "rigorous-llm-course"
+version = "0.2.0"
+description = "Rigorous Hugging Face-first course from decoder internals to production LLM systems"
+requires-python = ">=3.12"
+dependencies = [
+    "huggingface-hub>=0.30.0",
+    # Transformers 5 requires PyTorch >=2.4, unavailable on Intel macOS.
+    "transformers>=4.51.0,<5.0.0",
+    "datasets>=3.5.0",
+    # PyTorch stopped publishing newer Intel macOS wheels; keep that platform usable.
+    "torch>=2.2.0,<2.3.0; sys_platform == 'darwin' and platform_machine == 'x86_64'",
+    "torch>=2.6.0; sys_platform != 'darwin' or platform_machine != 'x86_64'",
+    # Intel-mac PyTorch 2.2 wheels were compiled against the NumPy 1.x ABI.
+    "numpy>=1.26.0,<2.0.0; sys_platform == 'darwin' and platform_machine == 'x86_64'",
+    "numpy>=2.0.0; sys_platform != 'darwin' or platform_machine != 'x86_64'",
+    "matplotlib>=3.9.0",
+    "scikit-learn>=1.6.0",
+    "sentence-transformers>=4.0.0",
+    "python-dotenv>=1.1.0",
+    "mcp>=1.6.0",
+    "rich>=14.0.0",
+    "httpx>=0.28.0",
+    "pydantic>=2.11.0",
+    "fastapi>=0.115.0",
+    "uvicorn>=0.34.0",
+    "ipykernel>=6.29.0",
+    "jupyterlab>=4.4.0",
+    "notebook>=7.4.0",
+]
+
+[project.optional-dependencies]
+# GPU-heavy fine-tuning deps — install separately on a GPU machine or Colab
+train = [
+    "peft>=0.15.0",
+    "trl>=0.16.0",
+    "accelerate>=1.6.0",
+    "bitsandbytes>=0.45.0",
+]
+
+[tool.uv]
+package = false
