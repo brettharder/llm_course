@@ -106,14 +106,14 @@ Every notebook can be opened directly in Google Colab after the repository is pu
 ```bash
 cd llm-course
 cp .env.example .env
-# Add HUGGINGFACE_TOKEN to .env
+# Add HF_TOKEN to .env
 
 uv sync
 uv run jupyter lab
 ```
 
 The mathematical notebooks and most small demonstrations run on CPU or Apple Silicon.
-Remote inference examples use `HUGGINGFACE_TOKEN`. Training notebooks place expensive
+Remote inference examples use `HF_TOKEN`. Training notebooks place expensive
 cells behind an explicit `RUN_TRAINING = False` guard.
 
 ## Google Colab

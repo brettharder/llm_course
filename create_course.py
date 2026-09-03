@@ -25,17 +25,17 @@ COLAB_PACKAGES = {
     24: ["transformers>=4.51,<5", "huggingface-hub>=0.30,<1", "sentencepiece"],
     25: ["transformers>=4.51,<5", "sentencepiece"],
     26: ["transformers>=4.51,<5", "huggingface-hub>=0.30,<1", "sentencepiece"],
-    27: ["transformers>=4.51,<5", "huggingface-hub>=0.30,<1", "python-dotenv>=1.1", "sentencepiece"],
+    27: ["transformers>=4.51,<5", "huggingface-hub>=0.30,<1", "sentencepiece"],
     28: ["sentence-transformers>=4,<6"],
     29: ["sentence-transformers>=4,<6", "datasets>=3.5,<6"],
     30: ["sentence-transformers>=4,<6"],
     31: ["sentence-transformers>=4,<6"],
-    32: ["huggingface-hub>=0.30,<1", "python-dotenv>=1.1"],
-    33: ["smolagents>=1.17", "huggingface-hub>=0.30,<1", "python-dotenv>=1.1"],
+    32: ["huggingface-hub>=0.30,<1"],
+    33: ["smolagents>=1.17", "huggingface-hub>=0.30,<1"],
     34: ["mcp>=1.6"],
-    39: ["huggingface-hub>=0.30,<1", "python-dotenv>=1.1"],
+    39: ["huggingface-hub>=0.30,<1"],
     40: ["lighteval>=0.12"],
-    43: ["huggingface-hub>=0.30,<1", "python-dotenv>=1.1", "pillow>=10"],
+    43: ["huggingface-hub>=0.30,<1", "pillow>=10"],
     45: ["transformers>=4.51,<5", "accelerate>=1.6", "safetensors>=0.5"],
     46: ["httpx>=0.28"],
     47: ["httpx>=0.28", "pydantic>=2.11"],
@@ -66,31 +66,27 @@ if IN_COLAB and PACKAGES:
     print("Installing notebook dependencies in the Colab runtime...")
     subprocess.check_call([sys.executable, "-m", "pip", "install", "--quiet", *PACKAGES])
 
-# Load an HF token from Colab Secrets without displaying it. In Colab, create a
-# secret named HF_TOKEN (or HUGGINGFACE_TOKEN) and enable notebook access.
-token = os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_TOKEN")
+# Load an HF token from the Colab Secrets UI without displaying it. Create a
+# secret named exactly HF_TOKEN and enable notebook access with its toggle.
+token = os.getenv("HF_TOKEN")
+token_error = None
 if IN_COLAB and not token:
     from google.colab import userdata
-    for secret_name in ("HF_TOKEN", "HUGGINGFACE_TOKEN"):
-        try:
-            token = userdata.get(secret_name)
-        except Exception:
-            token = None
-        if token:
-            break
+    try:
+        token = userdata.get("HF_TOKEN")
+    except Exception as exc:
+        token_error = type(exc).__name__
 elif not IN_COLAB:
     try:
         from dotenv import load_dotenv
         load_dotenv(".env")
     except ImportError:
         pass
-    token = os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_TOKEN")
+    token = os.getenv("HF_TOKEN")
 
-# `HF_TOKEN` is the canonical huggingface_hub variable. The course also sets its
-# descriptive alias because some lesson code uses HUGGINGFACE_TOKEN explicitly.
+# `HF_TOKEN` is the canonical huggingface_hub environment variable.
 if token:
     os.environ["HF_TOKEN"] = token
-    os.environ["HUGGINGFACE_TOKEN"] = token
 
 try:
     import torch
@@ -107,7 +103,10 @@ except ImportError:
 print("Colab runtime detected:", IN_COLAB)
 print("Hugging Face token configured:", bool(os.getenv("HF_TOKEN")))
 if IN_COLAB and not token:
-    print("Add an HF_TOKEN secret in Colab, enable notebook access, then rerun this cell.")
+    print("HF_TOKEN is unavailable. In Colab, open the key icon (Secrets), add HF_TOKEN, ")
+    print("enable its Notebook access toggle, and rerun this cell. Public models still work.")
+    if token_error:
+        print("Colab secret lookup status:", token_error)
 '''
     cell = code(source)
     cell["metadata"] = {"tags": ["setup", "colab"]}
@@ -1675,11 +1674,9 @@ add("03_huggingface/24_hub_models_inference.ipynb", "The Hub, Model Cards, and I
     """),
     code(r'''
     import os
-    from dotenv import load_dotenv
     from huggingface_hub import InferenceClient
 
-    load_dotenv()
-    token = os.getenv("HUGGINGFACE_TOKEN") or os.getenv("HF_TOKEN")
+    token = os.getenv("HF_TOKEN")
     chat_model = os.getenv("HF_CHAT_MODEL", "Qwen/Qwen2.5-7B-Instruct-1M")
     hf = InferenceClient(token=token) if token else None
     print("Remote client ready:", hf is not None, "model:", chat_model)
@@ -1737,10 +1734,8 @@ add("03_huggingface/27_generation_batching_structured.ipynb", "Generation, Batch
     code(r'''
     # Optional remote structured output.
     import json, os
-    from dotenv import load_dotenv
     from huggingface_hub import InferenceClient
-    load_dotenv()
-    token = os.getenv("HUGGINGFACE_TOKEN")
+    token = os.getenv("HF_TOKEN")
     if token:
         client = InferenceClient(token=token)
         schema = {"type": "json_schema", "json_schema": {"name": "concept",
@@ -1756,7 +1751,7 @@ add("03_huggingface/27_generation_batching_structured.ipynb", "Generation, Batch
         except Exception as exc:
             print("Provider/model may not support this schema:", type(exc).__name__)
     else:
-        print("Remote cell skipped: HUGGINGFACE_TOKEN is not configured.")
+        print("Remote cell skipped: add HF_TOKEN in Colab Secrets and rerun the setup cell.")
     '''),
     md(r"""
     ## 27.3 Streaming semantics
@@ -2129,13 +2124,11 @@ add("05_agents_mcp/32_tool_calling_agents.ipynb", "Tool Calling and Bounded Agen
     code(r'''
     # Optional remote HF loop. Provider/model tool support varies.
     import os
-    from dotenv import load_dotenv
     from huggingface_hub import InferenceClient
-    load_dotenv()
 
     def run_agent(question, max_steps=5):
-        token = os.getenv("HUGGINGFACE_TOKEN")
-        if not token: return "Set HUGGINGFACE_TOKEN to run the agent."
+        token = os.getenv("HF_TOKEN")
+        if not token: return "Add HF_TOKEN in Colab Secrets and rerun the setup cell."
         client = InferenceClient(token=token)
         messages = [{"role": "user", "content": question}]
         for step in range(max_steps):
@@ -2156,7 +2149,7 @@ add("05_agents_mcp/32_tool_calling_agents.ipynb", "Tool Calling and Bounded Agen
     if RUN_REMOTE_AGENT:
         print(run_agent("What is (17 * 23) + 9?"))
     else:
-        print("Remote agent skipped; set RUN_REMOTE_AGENT=True after configuring HUGGINGFACE_TOKEN.")
+        print("Remote agent skipped; configure HF_TOKEN, then set RUN_REMOTE_AGENT=True.")
     '''),
     md(r"""
     ## 32.2 Reliability controls
@@ -2289,7 +2282,7 @@ add("05_agents_mcp/33_huggingface_smolagents.ipynb", "Building Agents with Huggi
     if RUN_AGENT and SMOLAGENTS_AVAILABLE:
         from smolagents import InferenceClientModel, ToolCallingAgent
         model = InferenceClientModel(model_id=os.getenv("HF_AGENT_MODEL", "Qwen/Qwen2.5-7B-Instruct"),
-                                     token=os.getenv("HF_TOKEN") or os.getenv("HUGGINGFACE_TOKEN"))
+                                     token=os.getenv("HF_TOKEN"))
         agent = ToolCallingAgent(tools=[multiply], model=model, max_steps=4, planning_interval=2)
         answer = agent.run("Use the tool to compute 137 times 42, then explain the result briefly.")
         print(answer)
@@ -2956,13 +2949,11 @@ add("06_evaluation_security/39_llm_as_a_judge.ipynb", "LLM as a Judge", [
     '''),
     code(r'''
     import json, os
-    from dotenv import load_dotenv
     from huggingface_hub import InferenceClient
-    load_dotenv()
 
     def pointwise(question, candidate, reference):
-        token = os.getenv("HUGGINGFACE_TOKEN")
-        if not token: return {"skipped": "HUGGINGFACE_TOKEN missing"}
+        token = os.getenv("HF_TOKEN")
+        if not token: return {"skipped": "HF_TOKEN missing"}
         client = InferenceClient(token=token)
         payload = {"rubric": RUBRIC, "question": question,
                    "reference": reference, "candidate": candidate}
@@ -3234,15 +3225,13 @@ add("07_multimodal/43_vision_language_models.ipynb", "Vision-Language Models and
     code(r'''
     # Optional remote inference; model availability varies by provider.
     import os
-    from dotenv import load_dotenv
     from huggingface_hub import InferenceClient
-    load_dotenv()
-    token = os.getenv("HUGGINGFACE_TOKEN")
+    token = os.getenv("HF_TOKEN")
     if token:
         print("Use the current HF image-text-to-text model/provider from the model card.")
         print("Keep image bytes local unless you intend to send them to that provider.")
     else:
-        print("Remote example skipped: configure HUGGINGFACE_TOKEN.")
+        print("Remote example skipped: add HF_TOKEN in Colab Secrets and rerun setup.")
     '''),
     md(r"""
     ## 43.2 Documents are not just images

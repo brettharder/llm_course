@@ -36,8 +36,10 @@ prints it or stores it in the notebook.
 The VS Code extension still executes Python inside the remote Colab VM. It cannot read the `.env`
 file on your laptop unless that file is explicitly uploaded—which you should not do for credentials.
 Add `HF_TOKEN` through Colab's browser Secrets panel and enable notebook access, then reconnect or
-rerun the setup cell from VS Code. The course detects Colab by the installed `google.colab` module
-and Colab runtime variables, even when the extension attaches before that module has been imported.
+rerun the setup cell from VS Code. Secret configuration belongs in Colab's browser UI; the course
+does not prompt for, print, or persist tokens in notebook cells. The course detects Colab by the
+installed `google.colab` module and Colab runtime variables, even when an editor attaches before
+that module has been imported.
 
 To validate authentication without displaying the token:
 
@@ -62,7 +64,7 @@ The tagged `setup` / `colab` cell:
 
 1. Detects Colab.
 2. Installs only that notebook's extra dependencies.
-3. Loads `HF_TOKEN` or `HUGGINGFACE_TOKEN` from Secrets.
+3. Loads the canonical `HF_TOKEN` from the Colab Secrets UI.
 4. Reports Python, operating system, and accelerator.
 5. Warns when a training notebook has no CUDA GPU.
 
